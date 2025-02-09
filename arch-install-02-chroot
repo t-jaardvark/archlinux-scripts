@@ -178,58 +178,104 @@ pacman -S --noconfirm --needed \
     lightdm-gtk-greeter-settings
 
 # Create proper LightDM configuration with logging
-cat > /etc/lightdm/lightdm.conf << EOF
-[Seat:*]
-greeter-session=lightdm-gtk-greeter
-user-session=cinnamon
-logind-check-graphical=true
-
-[LightDM]
-log-directory=/var/log/lightdm
-minimum-display-number=0
-EOF
-
-# Configure LightDM GTK Greeter
-cat > /etc/lightdm/lightdm-gtk-greeter.conf << EOF
-[greeter]
-theme-name = Windows-10-Dark
-icon-theme-name = Windows-10
-font-name = Victor Mono 10
-EOF
-
-# Create logging directories with proper permissions
-mkdir -p /var/log/lightdm
-mkdir -p /var/log/cinnamon
-chmod 755 /var/log/lightdm
-chmod 755 /var/log/cinnamon
-chown lightdm:lightdm /var/log/lightdm
-
-# Create the Cinnamon session with logging
+print_msg "$COLOR_GREEN" "Setting up Cinnamon session..."
 mkdir -p /usr/share/xsessions
 cat > /usr/share/xsessions/cinnamon.desktop << EOF
 [Desktop Entry]
 Name=Cinnamon
 Comment=Window manager and compositor based on Mutter and GNOME 3
-Exec=/usr/local/bin/cinnamon-session-wrapper
+Exec=cinnamon-session
 TryExec=cinnamon-session
 Type=Application
 X-LightDM-DesktopName=Cinnamon
 DesktopNames=Cinnamon
 EOF
 
-# Create a wrapper script for cinnamon-session that includes logging
-cat > /usr/local/bin/cinnamon-session-wrapper << EOF
-#!/bin/bash
-exec cinnamon-session 2> /var/log/cinnamon/cinnamon-session-\${USER}-\$(date +%Y%m%d-%H%M%S).log
+# Create a basic Xsession configuration
+print_msg "$COLOR_GREEN" "Creating Xsession configuration..."
+cat > /etc/X11/xinit/Xsession << EOF
+#!/bin/sh
+# global Xsession file -- used by display managers and xinit
+
+# Load profile
+for file in "/etc/profile" "$HOME/.profile" "/etc/xprofile" "$HOME/.xprofile"; do
+    if [ -f "$file" ]; then
+        . "$file"
+    fi
+done
+
+# Load resources
+for file in "/etc/X11/Xresources" "$HOME/.Xresources"; do
+    if [ -f "$file" ]; then
+        xrdb -merge "$file"
+    fi
+done
+
+# Load keymaps
+for file in "/etc/X11/Xkbmap" "$HOME/.Xkbmap"; do
+    if [ -f "$file" ]; then
+        setxkbmap \`cat "$file"\`
+        XKB_IN_USE=yes
+    fi
+done
+
+# Load xmodmap if not using XKB
+if [ -z "$XKB_IN_USE" ]; then
+    for file in "/etc/X11/Xmodmap" "$HOME/.Xmodmap"; do
+        if [ -f "$file" ]; then
+           xmodmap "$file"
+        fi
+    done
+fi
+
+# Run all system xinitrc shell scripts
+if [ -d /etc/X11/xinit/xinitrc.d ]; then
+    for script in /etc/X11/xinit/xinitrc.d/?*.sh; do
+        [ -x "$script" ] && . "$script"
+    done
+fi
+
+# Start the window manager
+if [ -n "$1" ]; then
+    exec "$@"
+else
+    exec cinnamon-session
+fi
 EOF
 
-chmod +x /usr/local/bin/cinnamon-session-wrapper
-chown root:root /usr/local/bin/cinnamon-session-wrapper
-chmod 755 /var/log/cinnamon
-chmod 777 /var/log/cinnamon  # Allow all users to write logs
+chmod +x /etc/X11/xinit/Xsession
 
-systemctl enable lightdm
-########################################################################################
+# Update LightDM configuration
+print_msg "$COLOR_GREEN" "Updating LightDM configuration..."
+cat > /etc/lightdm/lightdm.conf << EOF
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=cinnamon
+session-wrapper=/etc/X11/xinit/Xsession
+
+[LightDM]
+log-directory=/var/log/lightdm
+minimum-display-number=0
+EOF
+
+# Ensure proper permissions
+print_msg "$COLOR_GREEN" "Setting proper permissions..."
+chmod 755 /etc/X11/xinit
+chmod 755 /etc/X11/xinit/Xsession
+chown -R root:root /etc/X11/xinit
+
+# Install additional dependencies that might be needed
+print_msg "$COLOR_GREEN" "Installing additional dependencies..."
+pacman -S --noconfirm --needed \
+    xorg-server-xephyr \
+    xorg-xauth \
+    xorg-xrdb \
+    xorg-xmodmap \
+    xorg-setxkbmap \
+    mesa
+
+# Remove the custom wrapper since we're using the standard Xsession now
+rm -f /usr/local/bin/cinnamon-session-wrapper
 
 # Ensure proper home directory permissions
 print_msg "$COLOR_GREEN" "Setting up home directory permissions..."
