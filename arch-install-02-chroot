@@ -151,16 +151,18 @@ popd
 
 #Desktop Environment Installation
 #lightdm-slick-greeter
-echo "Installing desktop environment packages..."
-pacman -S --noconfirm xorg xorg-server xorg-xinit gnome-keyring cinnamon cinnamon-translations nemo-fileroller \
-    lightdm lightdm-gtk-greeter \ 
-    firefox xterm dbus polkit polkit-gnome gnome-terminal \
-    gnome-session gnome-settings-daemon xdg-user-dirs-gtk 
-
-# Configure LightDM to use slick-greeter
-#echo "Configuring LightDM to use slick-greeter..."
-#echo "[Seat:*]" > /etc/lightdm/lightdm.conf
+########################################################################################
+echo "Installing LightDM Display Manager..."
+pacman -S --noconfirm --needed xorg xorg-server xorg-xinit lightdm lightdm-gtk-greeter
+echo "[Seat:*]" > /etc/lightdm/lightdm.conf
 #echo "greeter-session=lightdm-slick-greeter" >> /etc/lightdm/lightdm.conf
+systemctl enable lightdm
+########################################################################################
+########################################################################################
+echo "Install Cinnamon..."
+pacman -S --needed gnome-keyring cinnamon cinnamon-translations firefox xterm dbus polkit\
+ polkit-gnome gnome-terminal gnome-session gnome-settings-daemon
+########################################################################################
 
 # Ensure proper home directory permissions
 echo "Setting up home directory permissions..."
@@ -172,7 +174,7 @@ xdg-user-dirs-update --force
 
 # Enable required services
 echo "Enabling required services..."
-systemctl enable lightdm
+#systemctl enable lightdm
 systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable cups
