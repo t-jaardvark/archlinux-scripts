@@ -5,10 +5,11 @@
 # | (_| | | | (__| | | | | | | | | |_| |>  < 
 #  \__,_|_|  \___|_| |_|_|_|_| |_|\__,_/_/\_\
 #            01 - BASE SYSTEM INSTALL
+answers_file="/archlinux-scripts/answers.env"
 
 # Source environment variables if .env exists
-if [ -f answers.env ]; then
-    source answers.env
+if [ -f "$answers_file" ]; then
+    source "$answers_file"
 fi
 
 # Function to save variable to .env file

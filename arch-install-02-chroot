@@ -4,13 +4,14 @@
 # | (_| | | | (__| | | | | | | | | |_| |>  < 
 #  \__,_|_|  \___|_| |_|_|_|_| |_|\__,_/_/\_\
 #            02 - CHROOT SECTION                                            
+answers_file="/archlinux-scripts/answers.env"
 
 ### BEGIN CHROOT SECTION ###
 # Source the answers file
-if [ -f "/answers.env" ]; then
-    source "/answers.env"
+if [ -f "$answers_file" ]; then
+    source "$answers_file"
 else
-    echo "Error: answers.env not found in chroot environment"
+    echo "Error: $answers_file not found in chroot environment"
     exit 1
 fi
 
