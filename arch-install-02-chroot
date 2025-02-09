@@ -150,18 +150,75 @@ popd
 #systemctl enable --now snapper-cleanup.timer
 
 #Desktop Environment Installation
-#lightdm-slick-greeter
-########################################################################################
-echo "Installing LightDM Display Manager..."
-pacman -S --noconfirm --needed xorg xorg-server xorg-xinit lightdm lightdm-gtk-greeter
-echo "[Seat:*]" > /etc/lightdm/lightdm.conf
-#echo "greeter-session=lightdm-slick-greeter" >> /etc/lightdm/lightdm.conf
-systemctl enable lightdm
-########################################################################################
 ########################################################################################
 echo "Install Cinnamon..."
-pacman -S --needed gnome-keyring cinnamon cinnamon-translations firefox xterm dbus polkit\
+pacman -S --needed --noconfirm gnome-keyring cinnamon cinnamon-translations firefox xterm dbus polkit\
  polkit-gnome gnome-terminal gnome-session gnome-settings-daemon
+########################################################################################
+
+#Desktop Environment Installation
+########################################################################################
+echo "Installing LightDM Display Manager..."
+pacman -S --noconfirm --needed \
+    xorg \
+    xorg-server \
+    xorg-xinit \
+    lightdm \
+    lightdm-gtk-greeter \
+    lightdm-gtk-greeter-settings
+
+# Create proper LightDM configuration with logging
+cat > /etc/lightdm/lightdm.conf << EOF
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=cinnamon
+logind-check-graphical=true
+
+[LightDM]
+log-directory=/var/log/lightdm
+minimum-display-number=0
+EOF
+
+# Configure LightDM GTK Greeter
+cat > /etc/lightdm/lightdm-gtk-greeter.conf << EOF
+[greeter]
+theme-name = Windows-10-Dark
+icon-theme-name = Windows-10
+font-name = Victor Mono 10
+EOF
+
+# Create logging directories with proper permissions
+mkdir -p /var/log/lightdm
+mkdir -p /var/log/cinnamon
+chmod 755 /var/log/lightdm
+chmod 755 /var/log/cinnamon
+chown lightdm:lightdm /var/log/lightdm
+
+# Create the Cinnamon session with logging
+mkdir -p /usr/share/xsessions
+cat > /usr/share/xsessions/cinnamon.desktop << EOF
+[Desktop Entry]
+Name=Cinnamon
+Comment=Window manager and compositor based on Mutter and GNOME 3
+Exec=/usr/local/bin/cinnamon-session-wrapper
+TryExec=cinnamon-session
+Type=Application
+X-LightDM-DesktopName=Cinnamon
+DesktopNames=Cinnamon
+EOF
+
+# Create a wrapper script for cinnamon-session that includes logging
+cat > /usr/local/bin/cinnamon-session-wrapper << EOF
+#!/bin/bash
+exec cinnamon-session 2> /var/log/cinnamon/cinnamon-session-\${USER}-\$(date +%Y%m%d-%H%M%S).log
+EOF
+
+chmod +x /usr/local/bin/cinnamon-session-wrapper
+chown root:root /usr/local/bin/cinnamon-session-wrapper
+chmod 755 /var/log/cinnamon
+chmod 777 /var/log/cinnamon  # Allow all users to write logs
+
+systemctl enable lightdm
 ########################################################################################
 
 # Ensure proper home directory permissions
@@ -195,3 +252,8 @@ systemctl enable dbus
 
 # The system is now ready for use with Btrfs filesystem
 # and automatic snapshots configured through Snapper.
+
+# Verify LightDM service status
+echo "Verifying LightDM service status..."
+systemctl status lightdm || true
+systemctl is-enabled lightdm || true
