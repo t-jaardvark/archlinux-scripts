@@ -267,3 +267,7 @@ systemctl enable dbus
 print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
 systemctl status lightdm || true
 systemctl is-enabled lightdm || true
+
+print_msg "$COLOR_GREEN" "Configuring SSH for root access..."
+sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+systemctl enable sshd
