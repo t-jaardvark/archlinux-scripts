@@ -317,3 +317,28 @@ systemctl is-enabled lightdm || true
 print_msg "$COLOR_GREEN" "Configuring SSH for root access..."
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 systemctl enable sshd
+
+# Update LightDM GTK Greeter configuration with dark theme
+print_msg "$COLOR_GREEN" "Configuring LightDM GTK Greeter theme..."
+cat > /etc/lightdm/lightdm-gtk-greeter.conf << EOF
+[greeter]
+theme-name = Windows-10-Dark
+icon-theme-name = Windows-10
+font-name = Victor Mono 10
+background = #1a1a1a
+position = 50%,center 50%,center
+clock-format = %H:%M
+indicators = ~host;~spacer;~clock;~spacer;~session;~power
+EOF
+
+# Make sure LightDM is properly enabled
+print_msg "$COLOR_GREEN" "Ensuring LightDM service is enabled..."
+systemctl enable lightdm.service
+
+# Create a symlink to ensure service starts
+print_msg "$COLOR_GREEN" "Creating display manager symlink..."
+ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
+
+# Verify the service is properly enabled
+print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
+systemctl is-enabled lightdm.service || true
