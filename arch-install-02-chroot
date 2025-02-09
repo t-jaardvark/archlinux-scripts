@@ -342,3 +342,54 @@ ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manag
 # Verify the service is properly enabled
 print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
 systemctl is-enabled lightdm.service || true
+
+print_msg "$COLOR_GREEN" "Setting up default theme configuration..."
+
+# Create a first-login setup script
+cat > /etc/profile.d/set-default-theme.sh << EOF
+#!/bin/bash
+
+# Check if this is the first login
+if [ ! -f "\$HOME/.theme-configured" ]; then
+    # Set GTK3 theme
+    gsettings set org.cinnamon.desktop.interface gtk-theme 'Windows-10-Dark'
+    gsettings set org.cinnamon.desktop.interface icon-theme 'Windows-10'
+    gsettings set org.cinnamon.desktop.interface font-name 'Victor Mono 10'
+    
+    # Set Cinnamon theme
+    gsettings set org.cinnamon.theme name 'Windows-10-Dark'
+    gsettings set org.cinnamon.desktop.wm.preferences theme 'Windows-10-Dark'
+    
+    # Create the marker file
+    touch "\$HOME/.theme-configured"
+fi
+EOF
+
+chmod +x /etc/profile.d/set-default-theme.sh
+
+# Create default dconf settings directory
+mkdir -p /etc/dconf/db/local.d/
+
+# Create default theme settings
+cat > /etc/dconf/db/local.d/00-theme << EOF
+[org/cinnamon/desktop/interface]
+gtk-theme='Windows-10-Dark'
+icon-theme='Windows-10'
+font-name='Victor Mono 10'
+
+[org/cinnamon/desktop/wm/preferences]
+theme='Windows-10-Dark'
+
+[org/cinnamon/theme]
+name='Windows-10-Dark'
+EOF
+
+# Create dconf profile
+mkdir -p /etc/dconf/profile
+echo "user-db:user
+system-db:local" > /etc/dconf/profile/user
+
+# Update dconf database
+dconf update
+
+print_msg "$COLOR_GREEN" "Theme configuration complete."

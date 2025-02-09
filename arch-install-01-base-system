@@ -6,6 +6,8 @@
 #  \__,_|_|  \___|_| |_|_|_|_| |_|\__,_/_/\_\
 #            01 - BASE SYSTEM INSTALL
 answers_file="/archlinux-scripts/answers.env"
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
 
 # Source environment variables if .env exists
 if [ -f "$answers_file" ]; then
@@ -16,13 +18,13 @@ fi
 save_to_env() {
     local var_name=$1
     local var_value=$2
-    echo "${var_name}=\"${var_value}\"" >> answers.env
+    echo "${var_name}=\"${var_value}\"" >> "$answers_file"
 }
 
 # Function to check internet connectivity
 check_internet() {
     if ! ping -c 1 archlinux.org &>/dev/null; then
-        echo "No internet connection. Please connect and try again."
+        echo -e "${GREEN}No internet connection. Please connect and try again.${NC}"
         exit 1
     fi
 }
@@ -31,11 +33,11 @@ check_internet() {
 get_block_device() {
     if [ -z "$USER_DEV" ]; then
         clear
-        echo "Checking available block devices..."
+        echo -e "${GREEN}Checking available block devices...${NC}"
         lsblk
         read -p "Enter block device (e.g., /dev/sda): " USER_DEV
         if [ ! -b "$USER_DEV" ]; then
-            echo "Invalid block device"
+            echo -e "${GREEN}Invalid block device${NC}"
             exit 1
         fi
         save_to_env "USER_DEV" "$USER_DEV"
@@ -46,7 +48,7 @@ get_block_device() {
 get_username() {
     if [ -z "$USER_USER" ]; then
         clear
-        echo "Setting up user account..."
+        echo -e "${GREEN}Setting up user account...${NC}"
         read -p "Enter username (default: user): " USER_USER
         USER_USER=${USER_USER:-user}
         save_to_env "USER_USER" "$USER_USER"
@@ -57,13 +59,13 @@ get_username() {
 get_user_password() {
     if [ -z "$USER_USER_PASS" ]; then
         clear
-        echo "Setting password for user: $USER_USER"
+        echo -e "${GREEN}Setting password for user: $USER_USER${NC}"
         read -s -p "Enter user password: " USER_USER_PASS
         echo
         read -s -p "Confirm user password: " USER_PASS_CONFIRM
         echo
         if [ "$USER_USER_PASS" != "$USER_PASS_CONFIRM" ]; then
-            echo "Passwords do not match!"
+            echo -e "${GREEN}Passwords do not match!${NC}"
             exit 1
         fi
         save_to_env "USER_USER_PASS" "$USER_USER_PASS"
@@ -74,7 +76,7 @@ get_user_password() {
 get_country() {
     if [ -z "$USER_COUNTRY" ]; then
         clear
-        echo "Configuring system location..."
+        echo -e "${GREEN}Configuring system location...${NC}"
         read -p "Enter country for mirror (default: United States): " USER_COUNTRY
         USER_COUNTRY=${USER_COUNTRY:-"United States"}
         save_to_env "USER_COUNTRY" "$USER_COUNTRY"
@@ -85,7 +87,7 @@ get_country() {
 get_timezone() {
     if [ -z "$USER_TZ" ]; then
         clear
-        echo "Setting timezone..."
+        echo -e "${GREEN}Setting timezone...${NC}"
         read -p "Enter timezone (default: America/Chicago): " USER_TZ
         USER_TZ=${USER_TZ:-"America/Chicago"}
         save_to_env "USER_TZ" "$USER_TZ"
@@ -96,7 +98,7 @@ get_timezone() {
 get_hostname() {
     if [ -z "$USER_HOSTNAME" ]; then
         clear
-        echo "Setting system hostname..."
+        echo -e "${GREEN}Setting system hostname...${NC}"
         # Generate random 8-character hex string
         RANDOM_HEX=$(openssl rand -hex 4)
         DEFAULT_HOSTNAME="arch${RANDOM_HEX}"
@@ -110,13 +112,13 @@ get_hostname() {
 get_root_password() {
     if [ -z "$USER_ROOT_PASS" ]; then
         clear
-        echo "Setting root password..."
+        echo -e "${GREEN}Setting root password...${NC}"
         read -s -p "Enter root password: " USER_ROOT_PASS
         echo
         read -s -p "Confirm root password: " ROOT_PASS_CONFIRM
         echo
         if [ "$USER_ROOT_PASS" != "$ROOT_PASS_CONFIRM" ]; then
-            echo "Passwords do not match!"
+            echo -e "${GREEN}Passwords do not match!${NC}"
             exit 1
         fi
         save_to_env "USER_ROOT_PASS" "$USER_ROOT_PASS"
@@ -127,15 +129,15 @@ get_root_password() {
 confirm_partitions() {
     if [ -z "$USER_REPLACE_PART" ]; then
         clear
-        echo "Configuring partitions..."
-        echo "Choose partition setup:"
-        echo "1) Replace all partitions with new btrfs layout (default)"
-        echo "2) Use existing btrfs, preserve @home, @opt, and @srv (will format others)"
+        echo -e "${GREEN}Configuring partitions...${NC}"
+        echo -e "${GREEN}Choose partition setup:${NC}"
+        echo -e "${GREEN}1) Replace all partitions with new btrfs layout (default)${NC}"
+        echo -e "${GREEN}2) Use existing btrfs, preserve @home, @opt, and @srv (will format others)${NC}"
         read -p "Enter choice (default: 1): " REPLY
 
         case $REPLY in
             2)
-                echo "WARNING: This will format all subvolumes except @home, @opt, and @srv"
+                echo -e "${GREEN}WARNING: This will format all subvolumes except @home, @opt, and @srv${NC}"
                 read -p "Are you sure? (y/N): " CONFIRM
                 if [[ $CONFIRM =~ ^[Yy]$ ]]; then
                     USER_REPLACE_PART=2
@@ -144,12 +146,12 @@ confirm_partitions() {
                 fi
                 ;;
             *)
-                echo "WARNING: This will delete all existing partitions on $USER_DEV"
+                echo -e "${GREEN}WARNING: This will delete all existing partitions on $USER_DEV${NC}"
                 read -p "Are you sure? (y/N): " CONFIRM
                 if [[ $CONFIRM =~ ^[Yy]$ ]]; then
                     USER_REPLACE_PART=1
                 else
-                    echo "Installation cancelled"
+                    echo -e "${GREEN}Installation cancelled${NC}"
                     exit 1
                 fi
                 ;;
@@ -161,19 +163,19 @@ confirm_partitions() {
 # Function to create and format partitions
 create_partitions() {
     if [ "$USER_REPLACE_PART" -eq 1 ]; then
-        echo "Creating new partition layout..."
+        echo -e "${GREEN}Creating new partition layout...${NC}"
         # Remove existing partitions
         sgdisk -Z "$USER_DEV"
 
         # Create new partitions
-        echo "Creating EFI and root partitions..."
+        echo -e "${GREEN}Creating EFI and root partitions...${NC}"
         sgdisk -n 1:0:+1024M -t 1:ef00 "$USER_DEV" # EFI partition
         sgdisk -n 2:0:0 -t 2:8300 "$USER_DEV"      # Root partition
 
         # Format partitions
-        echo "Formatting EFI partition (FAT32)..."
+        echo -e "${GREEN}Formatting EFI partition (FAT32)...${NC}"
         mkfs.fat -F32 "${USER_DEV}1"
-        echo "Formatting root partition (BTRFS)..."
+        echo -e "${GREEN}Formatting root partition (BTRFS)...${NC}"
         mkfs.btrfs -f "${USER_DEV}2"
     fi
 }
@@ -188,7 +190,7 @@ mount_with_fallback() {
     if ! mount -o noatime,compress=zstd,space_cache=v2,subvol="$subvol" "$device" "$mountpoint"; then
         # Second attempt without space_cache=v2
         if ! mount -o noatime,compress=zstd,subvol="$subvol" "$device" "$mountpoint"; then
-            echo "Failed to mount $subvol on $mountpoint"
+            echo -e "${GREEN}Failed to mount $subvol on $mountpoint${NC}"
             return 1
         fi
     fi
@@ -199,39 +201,39 @@ mount_with_fallback() {
 setup_btrfs() {
     local preserve_home_opt=$1
 
-    echo "Mounting BTRFS root for subvolume management..."
+    echo -e "${GREEN}Mounting BTRFS root for subvolume management...${NC}"
     # Mount the btrfs partition
     if ! mount "${USER_DEV}2" /mnt; then
-        echo "Failed to mount root for subvolume creation"
+        echo -e "${GREEN}Failed to mount root for subvolume creation${NC}"
         exit 1
     fi
 
     if [ "$preserve_home_opt" = true ]; then
-        echo "Preserving existing @home, @opt, and @srv subvolumes..."
+        echo -e "${GREEN}Preserving existing @home, @opt, and @srv subvolumes...${NC}"
         # Check if required subvolumes exist
         if ! btrfs subvolume list /mnt | grep -q "@home" || \
            ! btrfs subvolume list /mnt | grep -q "@opt" || \
            ! btrfs subvolume list /mnt | grep -q "@srv"; then
-            echo "Error: One or more required subvolumes (@home, @opt, @srv) not found in existing btrfs filesystem"
+            echo -e "${GREEN}Error: One or more required subvolumes (@home, @opt, @srv) not found in existing btrfs filesystem${NC}"
             umount /mnt
             exit 1
         fi
 
-        echo "Removing old subvolumes (except @home, @opt, and @srv)..."
+        echo -e "${GREEN}Removing old subvolumes (except @home, @opt, and @srv)...${NC}"
         # Delete all subvolumes except @home, @opt, and @srv
         for subvol in $(btrfs subvolume list /mnt | grep -v "@home\|@opt\|@srv" | awk '{print $NF}'); do
-            echo "Deleting subvolume: $subvol"
+            echo -e "${GREEN}Deleting subvolume: $subvol${NC}"
             btrfs subvolume delete "/mnt/$subvol"
         done
 
-        echo "Creating new subvolumes..."
+        echo -e "${GREEN}Creating new subvolumes...${NC}"
         # Create new subvolumes
         btrfs subvolume create /mnt/@
         btrfs subvolume create /mnt/@.snapshots
         btrfs subvolume create /mnt/@var_log
         btrfs subvolume create /mnt/@tmp
     else
-        echo "Creating fresh BTRFS subvolume layout..."
+        echo -e "${GREEN}Creating fresh BTRFS subvolume layout...${NC}"
         # Create all subvolumes
         btrfs subvolume create /mnt/@
         btrfs subvolume create /mnt/@home
@@ -244,60 +246,60 @@ setup_btrfs() {
 
     umount /mnt
 
-    echo "Mounting subvolumes..."
+    echo -e "${GREEN}Mounting subvolumes...${NC}"
     # Mount subvolumes with appropriate flags
     if ! mount_with_fallback "${USER_DEV}2" /mnt "@" "compress=zstd"; then
-        echo "Failed to mount root subvolume"
+        echo -e "${GREEN}Failed to mount root subvolume${NC}"
         exit 1
     fi
 
-    echo "Creating mount points..."
+    echo -e "${GREEN}Creating mount points...${NC}"
     mkdir -p /mnt/{boot,home,.snapshots,var/log,opt,tmp,srv}
 
-    echo "Mounting remaining subvolumes..."
+    echo -e "${GREEN}Mounting remaining subvolumes...${NC}"
     # Mount each subvolume with verification
     if ! mount_with_fallback "${USER_DEV}2" /mnt/home "@home" "compress=zstd"; then
-        echo "Failed to mount home subvolume"
+        echo -e "${GREEN}Failed to mount home subvolume${NC}"
         exit 1
     fi
 
     if ! mount_with_fallback "${USER_DEV}2" /mnt/.snapshots "@.snapshots" "compress=zstd"; then
-        echo "Failed to mount snapshots subvolume"
+        echo -e "${GREEN}Failed to mount snapshots subvolume${NC}"
         exit 1
     fi
 
     if ! mount_with_fallback "${USER_DEV}2" /mnt/var/log "@var_log" "compress=zstd"; then
-        echo "Failed to mount var_log subvolume"
+        echo -e "${GREEN}Failed to mount var_log subvolume${NC}"
         exit 1
     fi
 
     if ! mount_with_fallback "${USER_DEV}2" /mnt/opt "@opt" "compress=zstd"; then
-        echo "Failed to mount opt subvolume"
+        echo -e "${GREEN}Failed to mount opt subvolume${NC}"
         exit 1
     fi
 
     if ! mount_with_fallback "${USER_DEV}2" /mnt/tmp "@tmp" "nodev,nosuid,noexec"; then
-        echo "Failed to mount tmp subvolume"
+        echo -e "${GREEN}Failed to mount tmp subvolume${NC}"
         exit 1
     fi
 
     if ! mount_with_fallback "${USER_DEV}2" /mnt/srv "@srv" "compress=zstd"; then
-        echo "Failed to mount srv subvolume"
+        echo -e "${GREEN}Failed to mount srv subvolume${NC}"
         exit 1
     fi
 
-    echo "Mounting EFI partition..."
+    echo -e "${GREEN}Mounting EFI partition...${NC}"
     # Mount boot partition
     if ! mount "${USER_DEV}1" /mnt/boot; then
-        echo "Failed to mount boot partition"
+        echo -e "${GREEN}Failed to mount boot partition${NC}"
         exit 1
     fi
 
-    echo "All filesystems mounted successfully!"
+    echo -e "${GREEN}All filesystems mounted successfully!${NC}"
 }
 
 # Main script execution
-echo "Starting Arch Linux installation..."
+echo -e "${GREEN}Starting Arch Linux installation...${NC}"
 check_internet
 get_block_device
 get_username
@@ -309,51 +311,51 @@ get_hostname
 confirm_partitions
 
 # Sync time
-echo "Synchronizing system time..."
+echo -e "${GREEN}Synchronizing system time...${NC}"
 timedatectl set-ntp true
 
 # Update mirrors
-echo "Updating mirror list for $USER_COUNTRY..."
+echo -e "${GREEN}Updating mirror list for $USER_COUNTRY...${NC}"
 reflector -c "$USER_COUNTRY" --latest 5 --download-timeout 10 --sort rate --save /etc/pacman.d/mirrorlist
-echo "Synchronizing package databases..."
+echo -e "${GREEN}Synchronizing package databases...${NC}"
 pacman -Sy
 
 # Enable parallel downloads in pacman
-echo "Enabling parallel downloads in pacman..."
+echo -e "${GREEN}Enabling parallel downloads in pacman...${NC}"
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
 # Partition and format if requested
 if [ "$USER_REPLACE_PART" -eq 1 ]; then
-    echo "Preparing to create new partition layout..."
+    echo -e "${GREEN}Preparing to create new partition layout...${NC}"
     create_partitions
     setup_btrfs false
 elif [ "$USER_REPLACE_PART" -eq 2 ]; then
-    echo "Checking existing BTRFS partition..."
+    echo -e "${GREEN}Checking existing BTRFS partition...${NC}"
     # Verify the partition is btrfs
     if ! blkid "${USER_DEV}2" | grep -q 'TYPE="btrfs"'; then
-        echo "Error: ${USER_DEV}2 is not a btrfs partition"
+        echo -e "${GREEN}Error: ${USER_DEV}2 is not a btrfs partition${NC}"
         exit 1
     fi
     setup_btrfs true
 fi
 
 # Install base system
-echo "Installing base system packages (this may take a while)..."
+echo -e "${GREEN}Installing base system packages (this may take a while)...${NC}"
 pacstrap /mnt base linux linux-firmware amd-ucode base-devel vi vim nano micro
 
-echo "Copying mirror list to new system..."
+echo -e "${GREEN}Copying mirror list to new system...${NC}"
 cp "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/"
 
-echo "Generating fstab..."
+echo -e "${GREEN}Generating fstab...${NC}"
 genfstab -U /mnt >> /mnt/etc/fstab
 
 cp -R "/archlinux-scripts" "/mnt/"
 # Copy answers.env to new system
 if [ -f answers.env ]; then
-    echo "Copying answers.env to new system..."
+    echo -e "${GREEN}Copying answers.env to new system...${NC}"
     cp answers.env /mnt/archlinux-scripts/
 fi
 chmod -R +x "/mnt/archlinux-scripts" 
-echo "Base installation complete!"
-echo "Running arch-chroot /mnt /archlinux-scripts/arch-install-02-chroot"
+echo -e "${GREEN}Base installation complete!${NC}"
+echo -e "${GREEN}Running arch-chroot /mnt /archlinux-scripts/arch-install-02-chroot${NC}"
 arch-chroot "/mnt" /archlinux-scripts/arch-install-02-chroot
