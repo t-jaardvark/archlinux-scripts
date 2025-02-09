@@ -348,16 +348,12 @@ echo "Generating fstab..."
 genfstab -U /mnt >> /mnt/etc/fstab
 
 cp -R "/archlinux-scripts" "/mnt/"
-chmod -R +x "/mnt/archlinux-scripts" 
 # Copy answers.env to new system
 if [ -f answers.env ]; then
     echo "Copying answers.env to new system..."
-    cp answers.env /mnt/
+    cp answers.env /mnt/archlinux-scripts/
 fi
-
-echo "Base installation complete! You can now chroot into the system."
-echo "Next steps:"
-echo "1. Run arch-chroot /mnt"
-echo "2. Continue with system configuration"
-
+chmod -R +x "/mnt/archlinux-scripts" 
+echo "Base installation complete!"
+echo "Running arch-chroot /mnt /archlinux-scripts/arch-install-02-chroot"
 arch-chroot "/mnt" /archlinux-scripts/arch-install-02-chroot
