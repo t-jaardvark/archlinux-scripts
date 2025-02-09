@@ -346,9 +346,8 @@ cp "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/"
 echo "Generating fstab..."
 genfstab -U /mnt >> /mnt/etc/fstab
 
-curl -L -o "o2.sh" "https://gist.githubusercontent.com/t-jaardvark/f24d487d21cc1f7e10c6287882bcace4/raw"
-cp "o1.sh" "o2.sh" "/mnt"
-chmod +x "/mnt/o1.sh" "/mnt/o2.sh"
+cp -R "/archlinux-scripts" "/mnt/"
+chmod -R +x "/mnt/archlinux-scripts" 
 # Copy answers.env to new system
 if [ -f answers.env ]; then
     echo "Copying answers.env to new system..."
@@ -360,4 +359,4 @@ echo "Next steps:"
 echo "1. Run arch-chroot /mnt"
 echo "2. Continue with system configuration"
 
-arch-chroot "/mnt" /o2.sh
+arch-chroot "/mnt" /archlinux-scripts/02-chroot.sh
