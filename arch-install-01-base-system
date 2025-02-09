@@ -360,4 +360,4 @@ echo "Next steps:"
 echo "1. Run arch-chroot /mnt"
 echo "2. Continue with system configuration"
 
-arch-chroot "/mnt" /archlinux-scripts/02-chroot.sh
+arch-chroot "/mnt" /archlinux-scripts/arch-install-02-chroot
