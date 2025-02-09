@@ -52,6 +52,7 @@ print_msg "$COLOR_GREEN" "Installing additional packages..."
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils
 pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
+pacman -S --noconfirm gvfs-smb samba cifs-utils
 
 # Check for VirtualBox
 if systemd-detect-virt | grep -q "oracle"; then
@@ -419,3 +420,13 @@ cat > /usr/lib/firefox/distribution/policies.json << EOF
     }
 }
 EOF
+########################################################################################
+sudo pacman -S coreutils curl grep sed wget sudo binutils less unzip tar
+mkdir -p /tmp/am && pushd /tmp/am
+pushd /tmp/am
+wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
+popd
+rm -rf /tmp/am
+########################################################################################
+yay -S --noconfirm --needed signal-desktop-bin
+am -i obsidian cursor
