@@ -42,9 +42,9 @@ echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
 
 # Install base packages
 echo "Installing additional packages..."
-pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant > /var/log/install-packages.log 2>&1
-pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils >> /var/log/install-packages.log 2>&1
-pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers >> /var/log/install-packages.log 2>&1
+pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
+pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils
+pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
 
 # Check for EFI system
 echo "DEBUG: Checking for EFI system..."
@@ -116,11 +116,13 @@ rm VictorMono.zip
 popd
 #######################################################################
 # install yay
+pushd /tmp
 git clone https://aur.archlinux.org/yay.git
 pushd yay
-makepkg -si
+makepkg -si --noconfirm
 popd
-rm -rf yay
+rm -rf /tmp/yay
+popd
 #######################################################################
 
 
@@ -147,16 +149,17 @@ rm -rf yay
 #systemctl enable --now snapper-cleanup.timer
 
 #Desktop Environment Installation
+#lightdm-slick-greeter
 echo "Installing desktop environment packages..."
 pacman -S --noconfirm xorg xorg-server xorg-xinit gnome-keyring cinnamon cinnamon-translations nemo-fileroller \
-    lightdm lightdm-gtk-greeter lightdm-slick-greeter \
+    lightdm lightdm-gtk-greeter \ 
     firefox xterm dbus polkit polkit-gnome gnome-terminal \
-    gnome-session gnome-settings-daemon xdg-user-dirs-gtk >> /var/log/install-packages.log 2>&1
+    gnome-session gnome-settings-daemon xdg-user-dirs-gtk 
 
 # Configure LightDM to use slick-greeter
-echo "Configuring LightDM to use slick-greeter..."
-echo "[Seat:*]" > /etc/lightdm/lightdm.conf
-echo "greeter-session=lightdm-slick-greeter" >> /etc/lightdm/lightdm.conf
+#echo "Configuring LightDM to use slick-greeter..."
+#echo "[Seat:*]" > /etc/lightdm/lightdm.conf
+#echo "greeter-session=lightdm-slick-greeter" >> /etc/lightdm/lightdm.conf
 
 # Ensure proper home directory permissions
 echo "Setting up home directory permissions..."
