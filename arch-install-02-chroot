@@ -6,12 +6,26 @@
 #            02 - CHROOT SECTION                                            
 answers_file="/archlinux-scripts/answers.env"
 
+# Define color codes
+COLOR_GREEN='\033[0;32m'
+COLOR_YELLOW='\033[1;33m'
+COLOR_RED='\033[0;31m'
+COLOR_RESET='\033[0m'
+
+# Function for colored output
+print_msg() {
+    local color=$1
+    local msg=$2
+    echo -e "${color}${msg}${COLOR_RESET}"
+}
+
 ### BEGIN CHROOT SECTION ###
 # Source the answers file
 if [ -f "$answers_file" ]; then
+    print_msg "$COLOR_GREEN" "Sourcing answers file..."
     source "$answers_file"
 else
-    echo "Error: $answers_file not found in chroot environment"
+    print_msg "$COLOR_RED" "Error: $answers_file not found in chroot environment"
     exit 1
 fi
 
@@ -19,79 +33,75 @@ ln -sf /usr/share/zoneinfo/$USER_TIMEZONE /etc/localtime
 hwclock --systohc
 
 #Localization
-#    Edit /etc/locale.gen: Uncomment en_US.UTF-8 UTF-8
-#Generate locales:
+print_msg "$COLOR_GREEN" "Generating locales..."
 locale-gen
-#Create /etc/locale.conf:
-echo "LANG=en_US.UTF-8" > /etc/locale.conf
+print_msg "$COLOR_GREEN" "Setting up locale.conf..."
 
 #Network Configuration
-echo "$USER_HOSTNAME" > /etc/hostname
-echo "127.0.0.1   localhost" >> /etc/hosts
-echo "::1         localhost" >> /etc/hosts
-echo "127.0.1.1   $USER_HOSTNAME.localdomain   $USER_HOSTNAME" >> /etc/hosts
+print_msg "$COLOR_GREEN" "Configuring network settings..."
 
 #User Setup
-# Set root password
-echo "Setting root password..."
+print_msg "$COLOR_GREEN" "Setting root password..."
 echo "root:${USER_ROOT_PASS}" | chpasswd
 
-# Create user and set password
-echo "Creating user account..."
+print_msg "$COLOR_GREEN" "Creating user account..."
 useradd -mG wheel "$USER_USER"
 echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
 
-# Install base packages
-echo "Installing additional packages..."
+print_msg "$COLOR_GREEN" "Installing additional packages..."
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils
 pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
 
+# Check for VirtualBox
+if systemd-detect-virt | grep -q "oracle"; then
+    print_msg "$COLOR_GREEN" "VirtualBox detected - installing guest additions..."
+    pacman -S --noconfirm virtualbox-guest-utils
+    systemctl enable vboxservice.service
+fi
+
 # Check for EFI system
-echo "DEBUG: Checking for EFI system..."
-echo "DEBUG: Base device is: ${USER_DEV}"
-echo "DEBUG: EFI partition should be: ${USER_DEV}1"
-echo "DEBUG: Listing disk partitions:"
+print_msg "$COLOR_GREEN" "DEBUG: Checking for EFI system..."
+print_msg "$COLOR_GREEN" "DEBUG: Base device is: ${USER_DEV}"
+print_msg "$COLOR_GREEN" "DEBUG: EFI partition should be: ${USER_DEV}1"
+print_msg "$COLOR_GREEN" "DEBUG: Listing disk partitions:"
 lsblk
 
 if [ -d "/sys/firmware/efi" ]; then
-    echo "DEBUG: EFI directory found at /sys/firmware/efi"
-    echo "DEBUG: Contents of /sys/firmware/efi:"
+    print_msg "$COLOR_GREEN" "DEBUG: EFI directory found at /sys/firmware/efi"
+    print_msg "$COLOR_GREEN" "DEBUG: Contents of /sys/firmware/efi:"
     ls -la /sys/firmware/efi
     
-    echo "DEBUG: EFI system detected - installing EFI bootloader packages..."
-    # Install EFI specific packages
+    print_msg "$COLOR_GREEN" "DEBUG: EFI system detected - installing EFI bootloader packages..."
     pacman -S --noconfirm grub efibootmgr
     
-    echo "DEBUG: Verifying EFI partition is mounted at /boot:"
+    print_msg "$COLOR_GREEN" "DEBUG: Verifying EFI partition is mounted at /boot:"
     mount | grep boot
     
-    echo "DEBUG: Contents of /boot before GRUB installation:"
+    print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot before GRUB installation:"
     ls -la /boot
     
-    echo "DEBUG: Installing GRUB for EFI..."
+    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB for EFI..."
     grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
     
-    echo "DEBUG: GRUB installation exit code: $?"
-    echo "DEBUG: Contents of /boot after GRUB installation:"
+    print_msg "$COLOR_GREEN" "DEBUG: GRUB installation exit code: $?"
+    print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot after GRUB installation:"
     ls -la /boot
 else
-    echo "DEBUG: No EFI directory found, assuming BIOS system"
-    echo "DEBUG: Installing GRUB for BIOS..."
-    # Install GRUB for BIOS
+    print_msg "$COLOR_YELLOW" "DEBUG: No EFI directory found, assuming BIOS system"
+    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB for BIOS..."
     pacman -S --noconfirm grub
     
-    echo "DEBUG: Installing GRUB to disk: ${USER_DEV}"
+    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB to disk: ${USER_DEV}"
     grub-install --target=i386-pc --recheck "${USER_DEV}"
     
-    echo "DEBUG: GRUB installation exit code: $?"
+    print_msg "$COLOR_GREEN" "DEBUG: GRUB installation exit code: $?"
 fi
 
-# Generate GRUB configuration
-echo "DEBUG: Generating GRUB configuration..."
+print_msg "$COLOR_GREEN" "DEBUG: Generating GRUB configuration..."
 grub-mkconfig -o /boot/grub/grub.cfg
-echo "DEBUG: GRUB configuration generation exit code: $?"
-echo "DEBUG: Contents of /boot/grub:"
+print_msg "$COLOR_GREEN" "DEBUG: GRUB configuration generation exit code: $?"
+print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot/grub:"
 ls -la /boot/grub
 
 #######################################################################
@@ -151,14 +161,14 @@ popd
 
 #Desktop Environment Installation
 ########################################################################################
-echo "Install Cinnamon..."
+print_msg "$COLOR_GREEN" "Install Cinnamon..."
 pacman -S --needed --noconfirm gnome-keyring cinnamon cinnamon-translations firefox xterm dbus polkit\
  polkit-gnome gnome-terminal gnome-session gnome-settings-daemon
 ########################################################################################
 
 #Desktop Environment Installation
 ########################################################################################
-echo "Installing LightDM Display Manager..."
+print_msg "$COLOR_GREEN" "Installing LightDM Display Manager..."
 pacman -S --noconfirm --needed \
     xorg \
     xorg-server \
@@ -222,26 +232,26 @@ systemctl enable lightdm
 ########################################################################################
 
 # Ensure proper home directory permissions
-echo "Setting up home directory permissions..."
+print_msg "$COLOR_GREEN" "Setting up home directory permissions..."
 chown -R "${USER_USER}:${USER_USER}" "/home/${USER_USER}"
 
 # Create XDG user directories
-echo "Setting up XDG user directories..."
+print_msg "$COLOR_GREEN" "Setting up XDG user directories..."
 xdg-user-dirs-update --force
 
 # Enable required services
-echo "Enabling required services..."
+print_msg "$COLOR_GREEN" "Enabling required services..."
 #systemctl enable lightdm
 systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable cups
 
 # Add user to necessary groups
-echo "Adding user to required groups..."
+print_msg "$COLOR_GREEN" "Adding user to required groups..."
 usermod -aG audio,video,input,wheel "${USER_USER}"
 
 # Ensure dbus is properly setup
-echo "Ensuring dbus is properly configured..."
+print_msg "$COLOR_GREEN" "Ensuring dbus is properly configured..."
 dbus-uuidgen --ensure=/etc/machine-id
 systemctl enable dbus
 
@@ -254,6 +264,6 @@ systemctl enable dbus
 # and automatic snapshots configured through Snapper.
 
 # Verify LightDM service status
-echo "Verifying LightDM service status..."
+print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
 systemctl status lightdm || true
 systemctl is-enabled lightdm || true
