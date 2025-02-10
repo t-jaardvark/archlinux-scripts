@@ -29,6 +29,10 @@ else
     exit 1
 fi
 
+# Enable parallel downloads in pacman
+print_msg "$COLOR_GREEN" "Enabling parallel downloads in pacman..."
+sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
+
 ln -sf /usr/share/zoneinfo/$USER_TIMEZONE /etc/localtime
 hwclock --systohc
 
@@ -50,6 +54,7 @@ echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
 
 print_msg "$COLOR_GREEN" "Installing additional packages..."
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
+
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
 pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
 pacman -S --noconfirm gvfs-smb samba cifs-utils
@@ -524,9 +529,10 @@ EOF
 
 # Create Firefox default preferences
 mkdir -p /usr/lib/firefox/defaults/pref/
-cat > /usr/lib/firefox/defaults/pref/local-settings.js << EOF
+cat > /usr/lib/firefox/defaults/pref/autoconfig.js << EOF
 pref("general.config.filename", "firefox.cfg");
 pref("general.config.obscure_value", 0);
+pref("general.config.sandbox_enabled", false);
 EOF
 
 # Create Firefox configuration file
@@ -538,4 +544,29 @@ lockPref("browser.newtabpage.enabled", false);
 lockPref("browser.startup.homepage", "about:blank");
 lockPref("browser.search.defaultenginename", "Kagi");
 lockPref("browser.search.order.1", "Kagi");
+lockPref("browser.search.separatePrivateDefault.ui.enabled", false);
+lockPref("browser.search.suggest.enabled", true);
+lockPref("browser.urlbar.placeholderName", "Kagi");
+lockPref("browser.urlbar.placeholderName.private", "Kagi");
+lockPref("browser.search.hiddenOneOffs", "Google,Bing,Amazon.com,eBay,Wikipedia");
+lockPref("browser.search.modernConfig", true);
+lockPref("distribution.searchplugins.defaultLocale", "en-US");
+lockPref("general.config.sandbox_enabled", false);
 EOF
+
+# Ensure proper permissions
+chmod 644 /usr/lib/firefox/defaults/pref/autoconfig.js
+chmod 644 /usr/lib/firefox/firefox.cfg
+
+# Create a distribution preferences directory
+mkdir -p /usr/lib/firefox/browser/defaults/preferences/
+
+# Create autoconfig.js
+cat > /usr/lib/firefox/browser/defaults/preferences/autoconfig.js << EOF
+pref("general.config.filename", "firefox.cfg");
+pref("general.config.obscure_value", 0);
+pref("general.config.sandbox_enabled", false);
+EOF
+
+# Ensure proper permissions
+chmod 644 /usr/lib/firefox/browser/defaults/preferences/autoconfig.js
