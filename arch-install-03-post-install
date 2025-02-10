@@ -1,18 +1,18 @@
-# Cinnamon Settings
-gsettings set org.cinnamon number-workspaces 10
-
-# Install/Configure Geany
-sudo pacman -S geany
-pushd $HOME/.config/geany/colorschemes
-wget "https://raw.github.com/geany/geany-themes/master/colorschemes/kary-pro-colors-dark.conf"
+#!/bin/bash
+########################################################################################
+pacman -S --needed base-devel git
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+########################################################################################
+########################################################################################
+sudo pacman -S coreutils curl grep sed wget sudo binutils less unzip tar
+mkdir -p /tmp/am && pushd /tmp/am
+pushd /tmp/am
+wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
 popd
-
-# install play for timer applet on cinnamon
-sudo pacman -Sy sox
-
-# install AM
-https://github.com/ivan-hc/AM
-
-# install misc packages
-sudo pacman --noconfirm -S flameshot kitty signal-desktop libreoffice-fresh virtualbox-host-dkms
-
+rm -rf /tmp/am
+########################################################################################
+# install aur packages
+paru -S --noconfirm --needed 
+am -i obsidian cursor
