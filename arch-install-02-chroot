@@ -73,7 +73,7 @@ sudo -u "$USER_USER" mkdir -p /tmp/yay && pushd /tmp/yay
 sudo -u "$USER_USER" git clone https://aur.archlinux.org/yay.git /tmp/yay
 # Set PACMAN variable to include --noconfirm and --needed flags
 export PACMAN="pacman --noconfirm --needed"
-sudo -u "$USER_USER" makepkg -si
+yes | sudo -u "$USER_USER" makepkg -si
 sudo -u "$USER_USER" popd
 sudo -u "$USER_USER" rm -rf /tmp/yay
 echo -e "${GREEN}done installing yay...${NC}"
