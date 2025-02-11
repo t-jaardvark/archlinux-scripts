@@ -25,7 +25,7 @@ fi
 echo -e "${GREEN}Enabling parallel downloads in pacman...${NC}"
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
-echo -e "${GREEN}Setting up timezone...${NC}"
+echo -e "${GREEN}Setting up timezone...${NC}"#dotglob off
 ln -sf /usr/share/zoneinfo/$USER_TIMEZONE /etc/localtime
 hwclock --systohc
 
@@ -52,6 +52,15 @@ echo "root:${USER_ROOT_PASS}" | chpasswd
 echo -e "${GREEN}Creating user account...${NC}"
 useradd -mG wheel "$USER_USER"
 echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
+
+# Allow wheel group to execute sudo commands
+echo -e "${GREEN}Configuring sudo access for wheel group...${NC}"
+EDITOR='tee' visudo /etc/sudoers.d/wheel-nopasswd << EOF
+%wheel ALL=(ALL:ALL) ALL
+EOF
+
+# Ensure proper permissions
+chmod 440 /etc/sudoers.d/wheel-nopasswd
 
 echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant

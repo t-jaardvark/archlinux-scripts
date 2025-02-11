@@ -341,7 +341,7 @@ fi
 
 # Install base system
 echo -e "${GREEN}Installing base system packages (this may take a while)...${NC}"
-pacstrap /mnt base linux linux-firmware amd-ucode base-devel vi vim nano micro
+pacstrap /mnt base linux linux-firmware amd-ucode base-devel neovim micro sudo
 
 echo -e "${GREEN}Copying mirror list to new system...${NC}"
 cp "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/"
