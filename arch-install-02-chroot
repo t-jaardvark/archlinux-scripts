@@ -21,6 +21,12 @@ else
     exit 1
 fi
 
+# Set default values if not provided
+USER_ROOT_PASS=${USER_ROOT_PASS:-"idk"}
+USER_USER_PASS=${USER_USER_PASS:-"idk"}
+USER_DEV=${USER_DEV:-"/dev/sda"}
+CLEAR_PARTITIONS=${CLEAR_PARTITIONS:-"y"}
+
 # Enable parallel downloads in pacman
 echo -e "${GREEN}Enabling parallel downloads in pacman...${NC}"
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf

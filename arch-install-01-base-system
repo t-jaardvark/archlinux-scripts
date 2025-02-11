@@ -35,7 +35,8 @@ get_block_device() {
         clear
         echo -e "${GREEN}Checking available block devices...${NC}"
         lsblk
-        read -p "Enter block device (e.g., /dev/sda): " USER_DEV
+        read -p "Enter block device (default: /dev/sda): " USER_DEV
+        USER_DEV=${USER_DEV:-"/dev/sda"}
         if [ ! -b "$USER_DEV" ]; then
             echo -e "${GREEN}Invalid block device${NC}"
             exit 1
@@ -60,13 +61,17 @@ get_user_password() {
     if [ -z "$USER_USER_PASS" ]; then
         clear
         echo -e "${GREEN}Setting password for user: $USER_USER${NC}"
-        read -s -p "Enter user password: " USER_USER_PASS
+        read -s -p "Enter user password (default: idk): " USER_USER_PASS
         echo
-        read -s -p "Confirm user password: " USER_PASS_CONFIRM
-        echo
-        if [ "$USER_USER_PASS" != "$USER_PASS_CONFIRM" ]; then
-            echo -e "${GREEN}Passwords do not match!${NC}"
-            exit 1
+        if [ -z "$USER_USER_PASS" ]; then
+            USER_USER_PASS="idk"
+        else
+            read -s -p "Confirm user password: " USER_PASS_CONFIRM
+            echo
+            if [ "$USER_USER_PASS" != "$USER_PASS_CONFIRM" ]; then
+                echo -e "${GREEN}Passwords do not match!${NC}"
+                exit 1
+            fi
         fi
         save_to_env "USER_USER_PASS" "$USER_USER_PASS"
     fi
@@ -113,13 +118,17 @@ get_root_password() {
     if [ -z "$USER_ROOT_PASS" ]; then
         clear
         echo -e "${GREEN}Setting root password...${NC}"
-        read -s -p "Enter root password: " USER_ROOT_PASS
+        read -s -p "Enter root password (default: idk): " USER_ROOT_PASS
         echo
-        read -s -p "Confirm root password: " ROOT_PASS_CONFIRM
-        echo
-        if [ "$USER_ROOT_PASS" != "$ROOT_PASS_CONFIRM" ]; then
-            echo -e "${GREEN}Passwords do not match!${NC}"
-            exit 1
+        if [ -z "$USER_ROOT_PASS" ]; then
+            USER_ROOT_PASS="idk"
+        else
+            read -s -p "Confirm root password: " ROOT_PASS_CONFIRM
+            echo
+            if [ "$USER_ROOT_PASS" != "$ROOT_PASS_CONFIRM" ]; then
+                echo -e "${GREEN}Passwords do not match!${NC}"
+                exit 1
+            fi
         fi
         save_to_env "USER_ROOT_PASS" "$USER_ROOT_PASS"
     fi
@@ -138,8 +147,8 @@ confirm_partitions() {
         case $REPLY in
             2)
                 echo -e "${GREEN}WARNING: This will format all subvolumes except @home, @opt, and @srv${NC}"
-                read -p "Are you sure? (y/N): " CONFIRM
-                if [[ $CONFIRM =~ ^[Yy]$ ]]; then
+                read -p "Are you sure? (Y/n): " CONFIRM
+                if [[ -z "$CONFIRM" || $CONFIRM =~ ^[Yy]$ ]]; then
                     USER_REPLACE_PART=2
                 else
                     USER_REPLACE_PART=1
@@ -147,8 +156,8 @@ confirm_partitions() {
                 ;;
             *)
                 echo -e "${GREEN}WARNING: This will delete all existing partitions on $USER_DEV${NC}"
-                read -p "Are you sure? (y/N): " CONFIRM
-                if [[ $CONFIRM =~ ^[Yy]$ ]]; then
+                read -p "Are you sure? (Y/n): " CONFIRM
+                if [[ -z "$CONFIRM" || $CONFIRM =~ ^[Yy]$ ]]; then
                     USER_REPLACE_PART=1
                 else
                     echo -e "${GREEN}Installation cancelled${NC}"
