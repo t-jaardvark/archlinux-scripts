@@ -399,7 +399,7 @@ dconf update
 
 echo -e "${GREEN}Theme configuration complete.${NC}"
 
-pacman -S --noconfirm --needed kitty flameshot mpv rofi libreoffice-fresh signal-desktop
+pacman -S --noconfirm --needed kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany
 
 echo -e "${GREEN}Installing Firefox extensions (uBlock Origin, Dark Reader, SponsorBlock, Bitwarden, QR Code Generator, Old Reddit Redirect, RES, Custom Search Engine)..."
 mkdir -p /usr/lib/firefox/distribution
