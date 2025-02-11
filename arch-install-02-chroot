@@ -37,6 +37,14 @@ echo "LANG=$USER_LOCALE" > /etc/locale.conf
 echo "LC_COLLATE=$USER_LOCALE" >> /etc/locale.conf
 echo "LC_TIME=$USER_LOCALE" >> /etc/locale.conf
 
+########################################################################################
+echo -e "${GREEN}Installing my dotfiles...${NC}"
+git clone https://github.com/t-jaardvark/dotfiles /tmp/dotfiles
+shopt -s dotglob
+mv /tmp/dotfiles/* /etc/skel/
+rmdir /tmp/dotfiles
+shopt -u dotglob
+########################################################################################
 #User Setup
 echo -e "${GREEN}Setting root password...${NC}"
 echo "root:${USER_ROOT_PASS}" | chpasswd
@@ -538,5 +546,3 @@ EOF
 chmod 644 /usr/lib/firefox/browser/defaults/preferences/autoconfig.js
 
 
-git clone https://github.com/t-jaardvark/dotfiles /tmp/dotfiles
-cp -r /tmp/dotfiles/* /etc/skel/
