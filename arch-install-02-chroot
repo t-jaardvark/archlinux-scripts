@@ -53,18 +53,24 @@ echo -e "${GREEN}Creating user account...${NC}"
 useradd -mG wheel "$USER_USER"
 echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
 
-# Allow wheel group to execute sudo commands
 echo -e "${GREEN}Configuring sudo access for wheel group...${NC}"
 EDITOR='tee' visudo /etc/sudoers.d/wheel-nopasswd << EOF
-%wheel ALL=(ALL:ALL) ALL
+%wheel ALL=(ALL:ALL) NOPASSWD: ALL
 EOF
 
-# Ensure proper permissions
-chmod 440 /etc/sudoers.d/wheel-nopasswd
+echo -e "${GREEN}Installing yay...${NC}"
+read -p "Press Enter to continue"
+sudo pacman -S --noconfirm --needed git base-devel
+sudo -u "$USER_USER" mkdir -p /tmp/yay && pushd /tmp/yay
+sudo -u "$USER_USER" git clone https://aur.archlinux.org/yay.git /tmp/yay
+sudo -u "$USER_USER" makepkg -si
+sudo -u "$USER_USER" popd
+sudo -u "$USER_USER" rm -rf /tmp/yay
+echo -e "${GREEN}done installing yay...${NC}"
+read -p "Press Enter to continue"
 
 echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
-
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
 pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
 pacman -S --noconfirm gvfs-smb samba cifs-utils
