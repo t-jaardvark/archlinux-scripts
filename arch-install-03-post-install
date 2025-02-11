@@ -1,18 +1,43 @@
 #!/bin/bash
 
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
 ########################################################################################
-pacman -S --needed base-devel git
-git clone https://aur.archlinux.org/paru.git
-cd paru
-makepkg -si
+INSTALL_PARU=false
+if $INSTALL_PARU; then
+    echo -e "${GREEN}Installing paru...${NC}"
+    pacman -S --needed base-devel git
+    git clone https://aur.archlinux.org/paru.git
+    mkdir /tmp/paru && pushd /tmp/paru
+    makepkg -si
+    popd
+    rm -rf /tmp/paru
+fi
 ########################################################################################
+INSTALL_YAY=false
+if $INSTALL_YAY; then
+    echo -e "${GREEN}Installing yay...${NC}"
+    sudo pacman -S --noconfirm --needed git base-devel
+    mkdir -p /tmp/yay && pushd /tmp/yay
+    git clone https://aur.archlinux.org/yay.git
+    cd yay
+    makepkg -si
+    popd
+    rm -rf /tmp/yay
+fi
 ########################################################################################
-sudo pacman -S coreutils curl grep sed wget sudo binutils less unzip tar
-mkdir -p /tmp/am && pushd /tmp/am
-pushd /tmp/am
-wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
-popd
-rm -rf /tmp/am
+INSTALL_AM=false
+if $INSTALL_AM; then
+    echo -e "${GREEN}Installing AM...${NC}"
+    sudo pacman -S --noconfirm --needed coreutils curl grep sed wget sudo binutils less unzip tar
+    mkdir -p /tmp/am && pushd /tmp/am
+    wget https://raw.githubusercontent.com/ivan-hc/AM/main/INSTALL && chmod a+x ./INSTALL && sudo ./INSTALL
+    popd
+    rm -rf /tmp/am
+fi
 ########################################################################################
 # install aur packages
 paru -S --noconfirm --needed 

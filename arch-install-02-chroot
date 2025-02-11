@@ -7,134 +7,125 @@
 answers_file="/archlinux-scripts/answers.env"
 
 # Define color codes
-COLOR_GREEN='\033[0;32m'
-COLOR_YELLOW='\033[1;33m'
-COLOR_RED='\033[0;31m'
-COLOR_RESET='\033[0m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
 
-# Function for colored output
-print_msg() {
-    local color=$1
-    local msg=$2
-    echo -e "${color}${msg}${COLOR_RESET}"
-}
-
-### BEGIN CHROOT SECTION ###
 # Source the answers file
 if [ -f "$answers_file" ]; then
-    print_msg "$COLOR_GREEN" "Sourcing answers file..."
+    echo -e "${GREEN}Sourcing answers file...${NC}"
     source "$answers_file"
 else
-    print_msg "$COLOR_RED" "Error: $answers_file not found in chroot environment"
+    echo -e "${RED}Error: $answers_file not found in chroot environment${NC}"
     exit 1
 fi
 
 # Enable parallel downloads in pacman
-print_msg "$COLOR_GREEN" "Enabling parallel downloads in pacman..."
+echo -e "${GREEN}Enabling parallel downloads in pacman...${NC}"
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
+echo -e "${GREEN}Setting up timezone...${NC}"
 ln -sf /usr/share/zoneinfo/$USER_TIMEZONE /etc/localtime
 hwclock --systohc
 
 #Localization
-print_msg "$COLOR_GREEN" "Generating locales..."
+echo -e "${GREEN}Generating locales...${NC}"
 locale-gen
-print_msg "$COLOR_GREEN" "Setting up locale.conf..."
-
-#Network Configuration
-print_msg "$COLOR_GREEN" "Configuring network settings..."
+echo -e "${GREEN}Setting up locale.conf...${NC}"
+echo "LANG=$USER_LOCALE" > /etc/locale.conf
+echo "LC_COLLATE=$USER_LOCALE" >> /etc/locale.conf
+echo "LC_TIME=$USER_LOCALE" >> /etc/locale.conf
 
 #User Setup
-print_msg "$COLOR_GREEN" "Setting root password..."
+echo -e "${GREEN}Setting root password...${NC}"
 echo "root:${USER_ROOT_PASS}" | chpasswd
 
-print_msg "$COLOR_GREEN" "Creating user account..."
+echo -e "${GREEN}Creating user account...${NC}"
 useradd -mG wheel "$USER_USER"
 echo "${USER_USER}:${USER_USER_PASS}" | chpasswd
 
-print_msg "$COLOR_GREEN" "Installing additional packages..."
+echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
 
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
 pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
 pacman -S --noconfirm gvfs-smb samba cifs-utils
-pacman -S --noconfirm flatpak
+pacman -S --noconfirm flatpak libfuse2 exfat-utils ntfs-3g
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-pacman -S --noconfirm libfuse2
-pacman -S --noconfirm libf
 
 # Configure NTFS3 as default NTFS driver
-print_msg "$COLOR_GREEN" "Configuring NTFS3 as default driver..."
+echo -e "${GREEN}Configuring NTFS3 as default driver...${NC}"
 cat > /etc/udev/rules.d/ntfs3_by_default.rules << EOF
 SUBSYSTEM=="block", ENV{ID_FS_TYPE}=="ntfs", ENV{ID_FS_TYPE}="ntfs3"
 EOF
 
 # Check for VirtualBox
 if systemd-detect-virt | grep -q "oracle"; then
-    print_msg "$COLOR_GREEN" "VirtualBox detected - installing guest additions..."
+    echo -e "${GREEN}VirtualBox detected - installing guest additions...${NC}"
     pacman -S --noconfirm virtualbox-guest-utils
     systemctl enable vboxservice.service
 fi
 
 # Check for EFI system
-print_msg "$COLOR_GREEN" "DEBUG: Checking for EFI system..."
-print_msg "$COLOR_GREEN" "DEBUG: Base device is: ${USER_DEV}"
-print_msg "$COLOR_GREEN" "DEBUG: EFI partition should be: ${USER_DEV}1"
-print_msg "$COLOR_GREEN" "DEBUG: Listing disk partitions:"
+echo -e "${GREEN}Checking for EFI system...${NC}"
+echo -e "${GREEN}Base device is: ${USER_DEV}${NC}"
+echo -e "${GREEN}EFI partition should be: ${USER_DEV}1${NC}"
+echo -e "${GREEN}Listing disk partitions:${NC}"
 lsblk
 
 if [ -d "/sys/firmware/efi" ]; then
-    print_msg "$COLOR_GREEN" "DEBUG: EFI directory found at /sys/firmware/efi"
-    print_msg "$COLOR_GREEN" "DEBUG: Contents of /sys/firmware/efi:"
+    echo -e "${GREEN}EFI directory found at /sys/firmware/efi${NC}"
+    echo -e "${GREEN}Contents of /sys/firmware/efi:${NC}"
     ls -la /sys/firmware/efi
     
-    print_msg "$COLOR_GREEN" "DEBUG: EFI system detected - installing EFI bootloader packages..."
+    echo -e "${GREEN}EFI system detected - installing EFI bootloader packages...${NC}"
     pacman -S --noconfirm grub efibootmgr
     
-    print_msg "$COLOR_GREEN" "DEBUG: Verifying EFI partition is mounted at /boot:"
+    echo -e "${GREEN}Verifying EFI partition is mounted at /boot:${NC}"
     mount | grep boot
     
-    print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot before GRUB installation:"
+    echo -e "${GREEN}Contents of /boot before GRUB installation:${NC}"
     ls -la /boot
     
-    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB for EFI..."
+    echo -e "${GREEN}Installing GRUB for EFI...${NC}"
     grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
     
-    print_msg "$COLOR_GREEN" "DEBUG: GRUB installation exit code: $?"
-    print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot after GRUB installation:"
+    echo -e "${GREEN}GRUB installation exit code: $?"
+    echo -e "${GREEN}Contents of /boot after GRUB installation:${NC}"
     ls -la /boot
 else
-    print_msg "$COLOR_YELLOW" "DEBUG: No EFI directory found, assuming BIOS system"
-    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB for BIOS..."
+    echo -e "${YELLOW}No EFI directory found, assuming BIOS system${NC}"
+    echo -e "${GREEN}Installing GRUB for BIOS...${NC}"
     pacman -S --noconfirm grub
     
-    print_msg "$COLOR_GREEN" "DEBUG: Installing GRUB to disk: ${USER_DEV}"
+    echo -e "${GREEN}Installing GRUB to disk: ${USER_DEV}${NC}"
     grub-install --target=i386-pc --recheck "${USER_DEV}"
     
-    print_msg "$COLOR_GREEN" "DEBUG: GRUB installation exit code: $?"
+    echo -e "${GREEN}GRUB installation exit code: $?"
 fi
 
-print_msg "$COLOR_GREEN" "DEBUG: Generating GRUB configuration..."
+echo -e "${GREEN}Generating GRUB configuration...${NC}"
 grub-mkconfig -o /boot/grub/grub.cfg
-print_msg "$COLOR_GREEN" "DEBUG: GRUB configuration generation exit code: $?"
-print_msg "$COLOR_GREEN" "DEBUG: Contents of /boot/grub:"
+echo -e "${GREEN}GRUB configuration generation exit code: $?"
+echo -e "${GREEN}Contents of /boot/grub:${NC}"
 ls -la /boot/grub
 
 #######################################################################
-# Install Windows-10-Dark theme
+echo -e "${GREEN}Install Windows-10-Dark theme...${NC}"
 mkdir -p /usr/share/themes
 pushd /usr/share/themes
 git clone https://github.com/B00merang-Project/Windows-10-Dark
 popd
 #######################################################################
-# Install Windows-10 icon theme
+echo -e "${GREEN}Install Windows-10 icon theme...${NC}"
 mkdir -p /usr/share/icons
 pushd /usr/share/icons
 git clone https://github.com/B00merang-Artwork/Windows-10
 gtk-update-icon-cache -f /usr/share/icons/Windows-10
 popd
 #######################################################################
-# install VictorMono Nerd Font
+echo -e "${GREEN}Install VictorMono Nerd Font...${NC}"
 mkdir -p /usr/share/fonts/TTF
 pushd /usr/share/fonts/TTF
 curl -L -o "VictorMono.zip" "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.3.0/VictorMono.zip"
@@ -142,39 +133,14 @@ unzip VictorMono.zip
 rm VictorMono.zip
 popd
 #######################################################################
-
-# Snapper Configuration *disabled for now*
-# Prepare Snapshot Directory
-#umount /.snapshots
-#rm -r /.snapshots
-#snapper -c root create-config /
-#btrfs subvolume delete /.snapshots
-#mkdir /.snapshots
-#mount -a
-#chmod 750 /.snapshots
-
-# Configure Snapper
-# Set timeline limits:
-#echo 'TIMELINE_LIMIT_YEARLY="0"' > /etc/snapper/configs/root
-#echo 'TIMELINE_LIMIT_MONTHLY="0"' >> /etc/snapper/configs/root
-#echo 'TIMELINE_LIMIT_WEEKLY="0"' >> /etc/snapper/configs/root
-#echo 'TIMELINE_LIMIT_DAILY="7"' >> /etc/snapper/configs/root
-#echo 'TIMELINE_LIMIT_HOURLY="5"' >> /etc/snapper/configs/root
-
-#Enable Snapper Services
-#systemctl enable --now snapper-timeline.timer
-#systemctl enable --now snapper-cleanup.timer
-
-#Desktop Environment Installation
-########################################################################################
-print_msg "$COLOR_GREEN" "Install Cinnamon..."
+echo -e "${GREEN}Install Cinnamon...${NC}"
 pacman -S --needed --noconfirm gnome-keyring cinnamon cinnamon-translations firefox xterm dbus polkit\
  polkit-gnome gnome-terminal gnome-session gnome-settings-daemon
 ########################################################################################
 
 #Desktop Environment Installation
 ########################################################################################
-print_msg "$COLOR_GREEN" "Installing LightDM Display Manager..."
+echo -e "${GREEN}Installing LightDM Display Manager...${NC}"
 pacman -S --noconfirm --needed \
     xorg \
     xorg-server \
@@ -184,7 +150,7 @@ pacman -S --noconfirm --needed \
     lightdm-gtk-greeter-settings
 
 # Create proper LightDM configuration with logging
-print_msg "$COLOR_GREEN" "Setting up Cinnamon session..."
+echo -e "${GREEN}Setting up Cinnamon session...${NC}"
 mkdir -p /usr/share/xsessions
 cat > /usr/share/xsessions/cinnamon.desktop << EOF
 [Desktop Entry]
@@ -198,7 +164,7 @@ DesktopNames=Cinnamon
 EOF
 
 # Create a basic Xsession configuration
-print_msg "$COLOR_GREEN" "Creating Xsession configuration..."
+echo -e "${GREEN}Creating Xsession configuration...${NC}"
 cat > /etc/X11/xinit/Xsession << EOF
 #!/bin/sh
 # global Xsession file -- used by display managers and xinit
@@ -252,7 +218,7 @@ EOF
 chmod +x /etc/X11/xinit/Xsession
 
 # Update LightDM configuration
-print_msg "$COLOR_GREEN" "Updating LightDM configuration..."
+echo -e "${GREEN}Updating LightDM configuration...${NC}"
 cat > /etc/lightdm/lightdm.conf << EOF
 [Seat:*]
 greeter-session=lightdm-gtk-greeter
@@ -265,13 +231,13 @@ minimum-display-number=0
 EOF
 
 # Ensure proper permissions
-print_msg "$COLOR_GREEN" "Setting proper permissions..."
+echo -e "${GREEN}Setting proper permissions...${NC}"
 chmod 755 /etc/X11/xinit
 chmod 755 /etc/X11/xinit/Xsession
 chown -R root:root /etc/X11/xinit
 
 # Install additional dependencies that might be needed
-print_msg "$COLOR_GREEN" "Installing additional dependencies..."
+echo -e "${GREEN}Installing additional dependencies...${NC}"
 pacman -S --noconfirm --needed \
     xorg-server-xephyr \
     xorg-xauth \
@@ -284,26 +250,26 @@ pacman -S --noconfirm --needed \
 rm -f /usr/local/bin/cinnamon-session-wrapper
 
 # Ensure proper home directory permissions
-print_msg "$COLOR_GREEN" "Setting up home directory permissions..."
+echo -e "${GREEN}Setting up home directory permissions...${NC}"
 chown -R "${USER_USER}:${USER_USER}" "/home/${USER_USER}"
 
 # Create XDG user directories
-print_msg "$COLOR_GREEN" "Setting up XDG user directories..."
+echo -e "${GREEN}Setting up XDG user directories...${NC}"
 xdg-user-dirs-update --force
 
 # Enable required services
-print_msg "$COLOR_GREEN" "Enabling required services..."
+echo -e "${GREEN}Enabling required services...${NC}"
 #systemctl enable lightdm
 systemctl enable NetworkManager
 systemctl enable bluetooth
 systemctl enable cups
 
 # Add user to necessary groups
-print_msg "$COLOR_GREEN" "Adding user to required groups..."
+echo -e "${GREEN}Adding user to required groups...${NC}"
 usermod -aG audio,video,input,wheel "${USER_USER}"
 
 # Ensure dbus is properly setup
-print_msg "$COLOR_GREEN" "Ensuring dbus is properly configured..."
+echo -e "${GREEN}Ensuring dbus is properly configured...${NC}"
 dbus-uuidgen --ensure=/etc/machine-id
 systemctl enable dbus
 
@@ -316,16 +282,16 @@ systemctl enable dbus
 # and automatic snapshots configured through Snapper.
 
 # Verify LightDM service status
-print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
+echo -e "${GREEN}Verifying LightDM service status...${NC}"
 systemctl status lightdm || true
 systemctl is-enabled lightdm || true
 
-print_msg "$COLOR_GREEN" "Configuring SSH for root access..."
+echo -e "${GREEN}Configuring SSH for root access...${NC}"
 sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 systemctl enable sshd
 
 # Update LightDM GTK Greeter configuration with dark theme
-print_msg "$COLOR_GREEN" "Configuring LightDM GTK Greeter theme..."
+echo -e "${GREEN}Configuring LightDM GTK Greeter theme...${NC}"
 cat > /etc/lightdm/lightdm-gtk-greeter.conf << EOF
 [greeter]
 theme-name = Windows-10-Dark
@@ -338,18 +304,18 @@ indicators = ~host;~spacer;~clock;~spacer;~session;~power
 EOF
 
 # Make sure LightDM is properly enabled
-print_msg "$COLOR_GREEN" "Ensuring LightDM service is enabled..."
+echo -e "${GREEN}Ensuring LightDM service is enabled...${NC}"
 systemctl enable lightdm.service
 
 # Create a symlink to ensure service starts
-print_msg "$COLOR_GREEN" "Creating display manager symlink..."
+echo -e "${GREEN}Creating display manager symlink...${NC}"
 ln -sf /usr/lib/systemd/system/lightdm.service /etc/systemd/system/display-manager.service
 
 # Verify the service is properly enabled
-print_msg "$COLOR_GREEN" "Verifying LightDM service status..."
+echo -e "${GREEN}Verifying LightDM service status...${NC}"
 systemctl is-enabled lightdm.service || true
 
-print_msg "$COLOR_GREEN" "Setting up default theme configuration..."
+echo -e "${GREEN}Setting up default theme configuration...${NC}"
 
 # Create a first-login setup script
 cat > /etc/profile.d/set-default-theme.sh << EOF
@@ -398,11 +364,11 @@ system-db:local" > /etc/dconf/profile/user
 # Update dconf database
 dconf update
 
-print_msg "$COLOR_GREEN" "Theme configuration complete."
+echo -e "${GREEN}Theme configuration complete.${NC}"
 
 pacman -S --noconfirm --needed kitty flameshot mpv rofi libreoffice-fresh signal-desktop
 
-print_msg "$COLOR_GREEN" "Installing Firefox extensions (uBlock Origin, Dark Reader, SponsorBlock, Bitwarden, QR Code Generator, Old Reddit Redirect, RES, Custom Search Engine)..."
+echo -e "${GREEN}Installing Firefox extensions (uBlock Origin, Dark Reader, SponsorBlock, Bitwarden, QR Code Generator, Old Reddit Redirect, RES, Custom Search Engine)..."
 mkdir -p /usr/lib/firefox/distribution
 cat > /usr/lib/firefox/distribution/policies.json << EOF
 {
@@ -570,3 +536,7 @@ EOF
 
 # Ensure proper permissions
 chmod 644 /usr/lib/firefox/browser/defaults/preferences/autoconfig.js
+
+
+git clone https://github.com/t-jaardvark/dotfiles /tmp/dotfiles
+cp -r /tmp/dotfiles/* /etc/skel/
