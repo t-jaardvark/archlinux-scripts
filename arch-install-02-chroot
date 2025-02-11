@@ -31,7 +31,7 @@ CLEAR_PARTITIONS=${CLEAR_PARTITIONS:-"y"}
 echo -e "${GREEN}Enabling parallel downloads in pacman...${NC}"
 sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 5/' /etc/pacman.conf
 
-echo -e "${GREEN}Setting up timezone...${NC}"#dotglob off
+echo -e "${GREEN}Setting up timezone...${NC}"
 ln -sf /usr/share/zoneinfo/$USER_TIMEZONE /etc/localtime
 hwclock --systohc
 
@@ -45,6 +45,7 @@ echo "LC_TIME=$USER_LOCALE" >> /etc/locale.conf
 
 ########################################################################################
 echo -e "${GREEN}Installing my dotfiles...${NC}"
+pacman -S --noconfirm --needed git
 git clone https://github.com/t-jaardvark/dotfiles /tmp/dotfiles
 shopt -s dotglob
 mv /tmp/dotfiles/* /etc/skel/
@@ -66,9 +67,11 @@ EOF
 
 echo -e "${GREEN}Installing yay...${NC}"
 read -p "Press Enter to continue"
-sudo pacman -S --noconfirm --needed git base-devel
+sudo pacman -S --noconfirm --needed base-devel go
 sudo -u "$USER_USER" mkdir -p /tmp/yay && pushd /tmp/yay
 sudo -u "$USER_USER" git clone https://aur.archlinux.org/yay.git /tmp/yay
+# Set PACMAN variable to include --noconfirm and --needed flags
+export PACMAN="pacman --noconfirm --needed"
 sudo -u "$USER_USER" makepkg -si
 sudo -u "$USER_USER" popd
 sudo -u "$USER_USER" rm -rf /tmp/yay
