@@ -66,19 +66,24 @@ EDITOR='tee' visudo /etc/sudoers.d/wheel-nopasswd << EOF
 %wheel ALL=(ALL:ALL) NOPASSWD: ALL
 EOF
 
+########################################################################################
 echo -e "${GREEN}Installing yay...${NC}"
-read -p "Press Enter to continue"
 sudo pacman -S --noconfirm --needed base-devel go
 sudo -u "$USER_USER" mkdir -p /tmp/yay && pushd /tmp/yay
 sudo -u "$USER_USER" git clone https://aur.archlinux.org/yay.git /tmp/yay
-# Set PACMAN variable to include --noconfirm and --needed flags
 export PACMAN="pacman --noconfirm --needed"
 yes | sudo -u "$USER_USER" makepkg -si
 sudo -u "$USER_USER" popd
 sudo -u "$USER_USER" rm -rf /tmp/yay
 echo -e "${GREEN}done installing yay...${NC}"
+########################################################################################
+echo -e "${GREEN}installing am "application manager"...${NC}"
 read -p "Press Enter to continue"
-
+mkdir -p /tmp/am && pushd /tmp/am
+wget -q https://raw.githubusercontent.com/ivan-hc/AM/main/AM-INSTALLER && chmod a+x ./AM-INSTALLER && ./AM-INSTALLER
+popd && rm -rf /tmp/am
+echo -e "${GREEN}done installing am "application manager"...${NC}"
+########################################################################################
 echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
@@ -399,7 +404,7 @@ dconf update
 
 echo -e "${GREEN}Theme configuration complete.${NC}"
 
-pacman -S --noconfirm --needed kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany
+pacman -S --noconfirm --needed kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany eza
 
 echo -e "${GREEN}Installing Firefox extensions (uBlock Origin, Dark Reader, SponsorBlock, Bitwarden, QR Code Generator, Old Reddit Redirect, RES, Custom Search Engine)..."
 mkdir -p /usr/lib/firefox/distribution
@@ -483,13 +488,7 @@ cat > /usr/lib/firefox/distribution/policies.json << EOF
                 }
             ],
             "Default": "Kagi",
-            "Remove": [
-                "Google",
-                "Bing",
-                "Amazon.com",
-                "eBay",
-                "Wikipedia"
-            ],
+            "Remove": [],
             "Update": [
                 {
                     "Name": "Amazon",
