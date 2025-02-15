@@ -83,7 +83,8 @@ mkdir -p /tmp/am && pushd /tmp/am
 wget -q https://raw.githubusercontent.com/ivan-hc/AM/main/AM-INSTALLER && chmod a+x ./AM-INSTALLER && ./AM-INSTALLER
 popd && rm -rf /tmp/am
 echo -e "${GREEN}done installing am "application manager"...${NC}"
-########################################################################################
+
+
 echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
 pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
@@ -406,6 +407,44 @@ echo -e "${GREEN}Theme configuration complete.${NC}"
 
 pacman -S --noconfirm --needed kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany eza
 
+########################################################################################
+#!/bin/bash
+
+# Check if running as root
+if [ "$EUID" -ne 0 ]; then 
+    echo "Please run as root"
+    exit 1
+fi
+
+# Update system first
+pacman -Syu --noconfirm
+
+# Install awesome window manager and common dependencies
+pacman -S --noconfirm awesome xorg-server xorg-xinit xterm vicious lua picom nitrogen kitty
+# Create default config directory if it doesn't exist
+mkdir -p /etc/xdg/awesome
+# Copy default config if it doesn't exist
+if [ ! -f /etc/xdg/awesome/rc.lua ]; then
+    cp /usr/share/awesome/rc.lua /etc/xdg/awesome/rc.lua
+fi
+
+# Create LightDM session file for Awesome WM
+mkdir -p /usr/share/xsessions
+cat > /usr/share/xsessions/awesome.desktop << EOF
+[Desktop Entry]
+Name=Awesome
+Comment=Awesome window manager
+Exec=awesome
+Type=Application
+EOF
+
+echo "LightDM session configuration created for Awesome WM"
+########################################################################################
+git clone https://github.com/t-jaardvark/tjwm /tmp/tjwm
+pushd /tmp/tjwm
+make install
+popd && rm -rf /tmp/tjwm
+########################################################################################
 echo -e "${GREEN}Installing Firefox extensions (uBlock Origin, Dark Reader, SponsorBlock, Bitwarden, QR Code Generator, Old Reddit Redirect, RES, Custom Search Engine)..."
 mkdir -p /usr/lib/firefox/distribution
 cat > /usr/lib/firefox/distribution/policies.json << EOF
