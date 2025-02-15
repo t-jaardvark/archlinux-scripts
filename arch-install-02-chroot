@@ -403,7 +403,7 @@ dconf update
 
 echo -e "${GREEN}Theme configuration complete.${NC}"
 
-pacman -S --noconfirm --needed kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany eza
+pacman -S --noconfirm --needed xclip kitty flameshot mpv vlc rofi libreoffice-fresh signal-desktop geany eza
 
 ########################################################################################
 #!/bin/bash
