@@ -5,6 +5,10 @@
 # | (_| | | | (__| | | | | | | | | |_| |>  < 
 #  \__,_|_|  \___|_| |_|_|_|_| |_|\__,_/_/\_\
 #            01 - BASE SYSTEM INSTALL
+
+# Record start time
+date '+%Y-%m-%d %H:%M:%S' > /archlinux-scripts/install_start_time
+
 answers_file="/archlinux-scripts/answers.env"
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
