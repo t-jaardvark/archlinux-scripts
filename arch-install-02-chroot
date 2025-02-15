@@ -657,22 +657,22 @@ confirm_partitions() {
     fi
 }
 
-# Calculate and display installation duration
+# Display installation duration
 START_TIME=$(cat /archlinux-scripts/install_start_time)
 END_TIME=$(date '+%Y-%m-%d %H:%M:%S')
-
-# Convert times to seconds since epoch
 START_SECONDS=$(date -d "$START_TIME" +%s)
 END_SECONDS=$(date -d "$END_TIME" +%s)
-
-# Calculate duration in seconds
 DURATION=$((END_SECONDS - START_SECONDS))
-
-# Convert to HH:MM:SS format
 HOURS=$((DURATION / 3600))
 MINUTES=$(( (DURATION % 3600) / 60 ))
 SECONDS=$((DURATION % 60))
-
 echo -e "${GREEN}Installation completed in: ${HOURS}:$(printf "%02d" $MINUTES):$(printf "%02d" $SECONDS)${NC}"
+
+# Reboot the system with delay
+echo -e "${GREEN}Installation complete. System will reboot in 5 seconds...${NC}"
+echo -e "${GREEN}(Use 'shutdown -c' to cancel)${NC}"
+echo "shutdown -c" >> ~/.zsh_history
+fc -R
+reboot -d 10
 
 
