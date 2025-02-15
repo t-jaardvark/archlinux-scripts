@@ -86,11 +86,11 @@ echo -e "${GREEN}done installing am "application manager"...${NC}"
 
 
 echo -e "${GREEN}Installing additional packages...${NC}"
-pacman -S --noconfirm networkmanager network-manager-applet dialog wpa_supplicant
-pacman -S --noconfirm mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
-pacman -S --noconfirm xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
-pacman -S --noconfirm gvfs-smb samba cifs-utils
-pacman -S --noconfirm flatpak libfuse2 exfat-utils ntfs-3g
+pacman -S --noconfirm --needed networkmanager network-manager-applet dialog wpa_supplicant
+pacman -S --noconfirm --needed mtools dosfstools git reflector snapper bluez bluez-utils cups xdg-utils exfat-utils
+pacman -S --noconfirm --needed xdg-user-dirs alsa-utils pipewire pipewire-alsa pipewire-pulse pipewire-jack base-devel linux-headers
+pacman -S --noconfirm --needed gvfs-smb samba cifs-utils
+pacman -S --noconfirm --needed flatpak libfuse2 exfat-utils ntfs-3g
 flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 # Configure NTFS3 as default NTFS driver
@@ -102,7 +102,7 @@ EOF
 # Check for VirtualBox
 if systemd-detect-virt | grep -q "oracle"; then
     echo -e "${GREEN}VirtualBox detected - installing guest additions...${NC}"
-    pacman -S --noconfirm virtualbox-guest-utils
+    pacman -S --noconfirm --needed virtualbox-guest-utils
     systemctl enable vboxservice.service
 fi
 
@@ -119,7 +119,7 @@ if [ -d "/sys/firmware/efi" ]; then
     ls -la /sys/firmware/efi
     
     echo -e "${GREEN}EFI system detected - installing EFI bootloader packages...${NC}"
-    pacman -S --noconfirm grub efibootmgr
+    pacman -S --noconfirm --needed grub efibootmgr
     
     echo -e "${GREEN}Verifying EFI partition is mounted at /boot:${NC}"
     mount | grep boot
@@ -136,7 +136,7 @@ if [ -d "/sys/firmware/efi" ]; then
 else
     echo -e "${YELLOW}No EFI directory found, assuming BIOS system${NC}"
     echo -e "${GREEN}Installing GRUB for BIOS...${NC}"
-    pacman -S --noconfirm grub
+    pacman -S --noconfirm --needed grub
     
     echo -e "${GREEN}Installing GRUB to disk: ${USER_DEV}${NC}"
     grub-install --target=i386-pc --recheck "${USER_DEV}"
@@ -420,13 +420,8 @@ fi
 pacman -Syu --noconfirm
 
 # Install awesome window manager and common dependencies
-pacman -S --noconfirm awesome xorg-server xorg-xinit xterm vicious lua picom nitrogen kitty
-# Create default config directory if it doesn't exist
-mkdir -p /etc/xdg/awesome
-# Copy default config if it doesn't exist
-if [ ! -f /etc/xdg/awesome/rc.lua ]; then
-    cp /usr/share/awesome/rc.lua /etc/xdg/awesome/rc.lua
-fi
+pacman -S --noconfirm --needed lightdm awesome xorg-server xterm ttf-dejavu vicious lua picom nitrogen
+
 ########################################################################################
 git clone https://github.com/t-jaardvark/tjwm /tmp/tjwm
 pushd /tmp/tjwm
