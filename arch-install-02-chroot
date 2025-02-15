@@ -427,18 +427,6 @@ mkdir -p /etc/xdg/awesome
 if [ ! -f /etc/xdg/awesome/rc.lua ]; then
     cp /usr/share/awesome/rc.lua /etc/xdg/awesome/rc.lua
 fi
-
-# Create LightDM session file for Awesome WM
-mkdir -p /usr/share/xsessions
-cat > /usr/share/xsessions/awesome.desktop << EOF
-[Desktop Entry]
-Name=Awesome
-Comment=Awesome window manager
-Exec=awesome
-Type=Application
-EOF
-
-echo "LightDM session configuration created for Awesome WM"
 ########################################################################################
 git clone https://github.com/t-jaardvark/tjwm /tmp/tjwm
 pushd /tmp/tjwm
@@ -469,96 +457,81 @@ cat > /usr/lib/firefox/distribution/policies.json << EOF
             ]
         },
         "SearchEngines": {
-            "Add": [
+            "Default": "Kagi",
+            "PreventInstalls": true,
+            "Install": [
                 {
                     "Name": "YouTube",
-                    "URLTemplate": "https://www.youtube.com/results?search_query={searchTerms}",
+                    "Description": "YouTube Search",
                     "Alias": "yt",
                     "Method": "GET",
-                    "IconURL": "https://www.youtube.com/favicon.ico"
+                    "URLTemplate": "https://www.youtube.com/results?search_query={searchTerms}",
+                    "IconURL": "https://www.youtube.com/favicon.ico",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Amazon Order History",
-                    "URLTemplate": "https://www.amazon.com/gp/legacy/order-history?search={searchTerms}",
+                    "Description": "Search Amazon Orders",
                     "Alias": "ao",
                     "Method": "GET",
-                    "IconURL": "https://www.amazon.com/favicon.ico"
+                    "URLTemplate": "https://www.amazon.com/gp/legacy/order-history?search={searchTerms}",
+                    "IconURL": "https://www.amazon.com/favicon.ico",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Amazon ASIN",
-                    "URLTemplate": "https://www.amazon.com/dp/product/{searchTerms}",
+                    "Description": "Search by ASIN",
                     "Alias": "asi",
                     "Method": "GET",
-                    "IconURL": "https://www.amazon.com/favicon.ico"
+                    "URLTemplate": "https://www.amazon.com/dp/product/{searchTerms}",
+                    "IconURL": "https://www.amazon.com/favicon.ico",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Libgen NonFiction",
-                    "URLTemplate": "https://libgen.is/search.php?req={searchTerms}",
+                    "Description": "Search Libgen Non-Fiction",
                     "Alias": "lg",
-                    "Method": "GET"
+                    "Method": "GET",
+                    "URLTemplate": "https://libgen.is/search.php?req={searchTerms}",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Libgen Fiction",
-                    "URLTemplate": "https://libgen.is/fiction/?q={searchTerms}&criteria=&language=en&format=",
+                    "Description": "Search Libgen Fiction",
                     "Alias": "lf",
-                    "Method": "GET"
+                    "Method": "GET",
+                    "URLTemplate": "https://libgen.is/fiction/?q={searchTerms}&criteria=&language=en&format=",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Kagi",
-                    "URLTemplate": "https://kagi.com/search?q={searchTerms}",
+                    "Description": "Kagi Search",
                     "Alias": "k",
                     "Method": "GET",
+                    "URLTemplate": "https://kagi.com/search?q={searchTerms}",
                     "IconURL": "https://kagi.com/favicon.ico",
-                    "SuggestURLTemplate": "https://kagi.com/api/autosuggest?q={searchTerms}"
+                    "SuggestURLTemplate": "https://kagi.com/api/autosuggest?q={searchTerms}",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Kagi Reddit",
-                    "URLTemplate": "https://kagi.com/search?q={searchTerms}+site%3Ahttp%3A%2F%2Freddit.com",
+                    "Description": "Kagi Reddit Search",
                     "Alias": "kr",
                     "Method": "GET",
-                    "IconURL": "https://kagi.com/favicon.ico"
+                    "URLTemplate": "https://kagi.com/search?q={searchTerms}+site%3Areddit.com",
+                    "IconURL": "https://kagi.com/favicon.ico",
+                    "Encoding": "UTF-8"
                 },
                 {
                     "Name": "Kagi Images",
-                    "URLTemplate": "https://kagi.com/images?q={searchTerms}",
+                    "Description": "Kagi Image Search",
                     "Alias": "ki",
                     "Method": "GET",
-                    "IconURL": "https://kagi.com/favicon.ico"
-                }
-            ],
-            "Default": "Kagi",
-            "Remove": [],
-            "Update": [
-                {
-                    "Name": "Amazon",
-                    "Alias": "az",
-                    "Method": "GET",
-                    "IconURL": "https://www.amazon.com/favicon.ico"
-                },
-                {
-                    "Name": "Bing",
-                    "Alias": "b",
-                    "Method": "GET",
-                    "IconURL": "https://www.bing.com/favicon.ico"
-                },
-                {
-                    "Name": "DuckDuckGo",
-                    "Alias": "d",
-                    "Method": "GET",
-                    "IconURL": "https://duckduckgo.com/favicon.ico"
-                },
-                {
-                    "Name": "eBay",
-                    "Alias": "e",
-                    "Method": "GET",
-                    "IconURL": "https://www.ebay.com/favicon.ico"
+                    "URLTemplate": "https://kagi.com/images?q={searchTerms}",
+                    "IconURL": "https://kagi.com/favicon.ico",
+                    "Encoding": "UTF-8"
                 }
             ]
-        },
-        "ExtensionSettings": {
-            "*": {
-                "installation_mode": "allowed"
-            }
         }
     }
 }
