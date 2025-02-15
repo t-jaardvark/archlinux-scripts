@@ -287,7 +287,7 @@ timedatectl set-ntp true
 
 # Update mirrors
 echo -e "${GREEN}Updating mirror list for $USER_COUNTRY...${NC}"
-reflector -c "$USER_COUNTRY" --latest 5 --download-timeout 10 --sort rate --save /etc/pacman.d/mirrorlist
+reflector -c "$USER_COUNTRY" --fastest 5 --protocol https --save /etc/pacman.d/mirrorlist
 echo -e "${GREEN}Synchronizing package databases...${NC}"
 pacman -Sy
 
