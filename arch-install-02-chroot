@@ -76,14 +76,12 @@ yes | sudo -u "$USER_USER" makepkg -si
 sudo -u "$USER_USER" popd
 sudo -u "$USER_USER" rm -rf /tmp/yay
 echo -e "${GREEN}done installing yay...${NC}"
-########################################################################################
+
 echo -e "${GREEN}installing am "application manager"...${NC}"
-read -p "Press Enter to continue"
 mkdir -p /tmp/am && pushd /tmp/am
 wget -q https://raw.githubusercontent.com/ivan-hc/AM/main/AM-INSTALLER && chmod a+x ./AM-INSTALLER && ./AM-INSTALLER
 popd && rm -rf /tmp/am
 echo -e "${GREEN}done installing am "application manager"...${NC}"
-
 
 echo -e "${GREEN}Installing additional packages...${NC}"
 pacman -S --noconfirm --needed networkmanager network-manager-applet dialog wpa_supplicant
@@ -575,5 +573,88 @@ EOF
 
 # Ensure proper permissions
 chmod 644 /usr/lib/firefox/browser/defaults/preferences/autoconfig.js
+
+# Function to get username
+get_username() {
+    if [ -z "$USER_USER" ]; then
+        # clear
+        # echo -e "${GREEN}Setting up user account...${NC}"
+        # read -p "Enter username (default: user): " USER_USER
+        USER_USER="user"
+        save_to_env "USER_USER" "$USER_USER"
+    fi
+}
+
+# Function to get user password
+get_user_password() {
+    if [ -z "$USER_USER_PASS" ]; then
+        # clear
+        # echo -e "${GREEN}Setting password for user: $USER_USER${NC}"
+        # read -s -p "Enter user password (default: idk): " USER_USER_PASS
+        # echo
+        USER_USER_PASS="idk"
+        save_to_env "USER_USER_PASS" "$USER_USER_PASS"
+    fi
+}
+
+# Function to get country
+get_country() {
+    if [ -z "$USER_COUNTRY" ]; then
+        # clear
+        # echo -e "${GREEN}Configuring system location...${NC}"
+        # read -p "Enter country for mirror (default: United States): " USER_COUNTRY
+        USER_COUNTRY="United States"
+        save_to_env "USER_COUNTRY" "$USER_COUNTRY"
+    fi
+}
+
+# Function to get timezone
+get_timezone() {
+    if [ -z "$USER_TZ" ]; then
+        # clear
+        # echo -e "${GREEN}Setting timezone...${NC}"
+        # read -p "Enter timezone (default: America/Chicago): " USER_TZ
+        USER_TZ="America/Chicago"
+        save_to_env "USER_TZ" "$USER_TZ"
+    fi
+}
+
+# Function to get hostname
+get_hostname() {
+    if [ -z "$USER_HOSTNAME" ]; then
+        # clear
+        # echo -e "${GREEN}Setting system hostname...${NC}"
+        # Generate random 8-character hex string
+        RANDOM_HEX=$(openssl rand -hex 4)
+        USER_HOSTNAME="arch${RANDOM_HEX}"
+        save_to_env "USER_HOSTNAME" "$USER_HOSTNAME"
+    fi
+}
+
+# Function to get root password
+get_root_password() {
+    if [ -z "$USER_ROOT_PASS" ]; then
+        # clear
+        # echo -e "${GREEN}Setting root password...${NC}"
+        # read -s -p "Enter root password (default: idk): " USER_ROOT_PASS
+        # echo
+        USER_ROOT_PASS="idk"
+        save_to_env "USER_ROOT_PASS" "$USER_ROOT_PASS"
+    fi
+}
+
+# Function to confirm partition replacement
+confirm_partitions() {
+    if [ -z "$USER_REPLACE_PART" ]; then
+        # clear
+        # echo -e "${GREEN}Configuring partitions...${NC}"
+        # echo -e "${GREEN}Choose partition setup:${NC}"
+        # echo -e "${GREEN}1) Replace all partitions with new btrfs layout (default)${NC}"
+        # echo -e "${GREEN}2) Use existing btrfs, preserve @home, @opt, and @srv (will format others)${NC}"
+        # read -p "Enter choice (default: 1): " REPLY
+        USER_REPLACE_PART=1
+        save_to_env "USER_REPLACE_PART" "$USER_REPLACE_PART"
+    fi
+}
 
 

@@ -32,11 +32,11 @@ check_internet() {
 # Function to get block device
 get_block_device() {
     if [ -z "$USER_DEV" ]; then
-        clear
-        echo -e "${GREEN}Checking available block devices...${NC}"
-        lsblk
-        read -p "Enter block device (default: /dev/sda): " USER_DEV
-        USER_DEV=${USER_DEV:-"/dev/sda"}
+        # clear
+        # echo -e "${GREEN}Checking available block devices...${NC}"
+        # lsblk
+        # read -p "Enter block device (default: /dev/sda): " USER_DEV
+        USER_DEV="/dev/sda"
         if [ ! -b "$USER_DEV" ]; then
             echo -e "${GREEN}Invalid block device${NC}"
             exit 1
@@ -48,10 +48,10 @@ get_block_device() {
 # Function to get username
 get_username() {
     if [ -z "$USER_USER" ]; then
-        clear
-        echo -e "${GREEN}Setting up user account...${NC}"
-        read -p "Enter username (default: user): " USER_USER
-        USER_USER=${USER_USER:-user}
+        # clear
+        # echo -e "${GREEN}Setting up user account...${NC}"
+        # read -p "Enter username (default: user): " USER_USER
+        USER_USER="user"
         save_to_env "USER_USER" "$USER_USER"
     fi
 }
@@ -59,20 +59,11 @@ get_username() {
 # Function to get user password
 get_user_password() {
     if [ -z "$USER_USER_PASS" ]; then
-        clear
-        echo -e "${GREEN}Setting password for user: $USER_USER${NC}"
-        read -s -p "Enter user password (default: idk): " USER_USER_PASS
-        echo
-        if [ -z "$USER_USER_PASS" ]; then
-            USER_USER_PASS="idk"
-        else
-            read -s -p "Confirm user password: " USER_PASS_CONFIRM
-            echo
-            if [ "$USER_USER_PASS" != "$USER_PASS_CONFIRM" ]; then
-                echo -e "${GREEN}Passwords do not match!${NC}"
-                exit 1
-            fi
-        fi
+        # clear
+        # echo -e "${GREEN}Setting password for user: $USER_USER${NC}"
+        # read -s -p "Enter user password (default: idk): " USER_USER_PASS
+        # echo
+        USER_USER_PASS="idk"
         save_to_env "USER_USER_PASS" "$USER_USER_PASS"
     fi
 }
@@ -80,10 +71,10 @@ get_user_password() {
 # Function to get country
 get_country() {
     if [ -z "$USER_COUNTRY" ]; then
-        clear
-        echo -e "${GREEN}Configuring system location...${NC}"
-        read -p "Enter country for mirror (default: United States): " USER_COUNTRY
-        USER_COUNTRY=${USER_COUNTRY:-"United States"}
+        # clear
+        # echo -e "${GREEN}Configuring system location...${NC}"
+        # read -p "Enter country for mirror (default: United States): " USER_COUNTRY
+        USER_COUNTRY="United States"
         save_to_env "USER_COUNTRY" "$USER_COUNTRY"
     fi
 }
@@ -91,10 +82,10 @@ get_country() {
 # Function to get timezone
 get_timezone() {
     if [ -z "$USER_TZ" ]; then
-        clear
-        echo -e "${GREEN}Setting timezone...${NC}"
-        read -p "Enter timezone (default: America/Chicago): " USER_TZ
-        USER_TZ=${USER_TZ:-"America/Chicago"}
+        # clear
+        # echo -e "${GREEN}Setting timezone...${NC}"
+        # read -p "Enter timezone (default: America/Chicago): " USER_TZ
+        USER_TZ="America/Chicago"
         save_to_env "USER_TZ" "$USER_TZ"
     fi
 }
@@ -102,13 +93,10 @@ get_timezone() {
 # Function to get hostname
 get_hostname() {
     if [ -z "$USER_HOSTNAME" ]; then
-        clear
-        echo -e "${GREEN}Setting system hostname...${NC}"
-        # Generate random 8-character hex string
+        # clear
+        # echo -e "${GREEN}Setting system hostname...${NC}"
         RANDOM_HEX=$(openssl rand -hex 4)
-        DEFAULT_HOSTNAME="arch${RANDOM_HEX}"
-        read -p "Enter hostname (default: $DEFAULT_HOSTNAME): " USER_HOSTNAME
-        USER_HOSTNAME=${USER_HOSTNAME:-$DEFAULT_HOSTNAME}
+        USER_HOSTNAME="arch${RANDOM_HEX}"
         save_to_env "USER_HOSTNAME" "$USER_HOSTNAME"
     fi
 }
@@ -116,20 +104,11 @@ get_hostname() {
 # Function to get root password
 get_root_password() {
     if [ -z "$USER_ROOT_PASS" ]; then
-        clear
-        echo -e "${GREEN}Setting root password...${NC}"
-        read -s -p "Enter root password (default: idk): " USER_ROOT_PASS
-        echo
-        if [ -z "$USER_ROOT_PASS" ]; then
-            USER_ROOT_PASS="idk"
-        else
-            read -s -p "Confirm root password: " ROOT_PASS_CONFIRM
-            echo
-            if [ "$USER_ROOT_PASS" != "$ROOT_PASS_CONFIRM" ]; then
-                echo -e "${GREEN}Passwords do not match!${NC}"
-                exit 1
-            fi
-        fi
+        # clear
+        # echo -e "${GREEN}Setting root password...${NC}"
+        # read -s -p "Enter root password (default: idk): " USER_ROOT_PASS
+        # echo
+        USER_ROOT_PASS="idk"
         save_to_env "USER_ROOT_PASS" "$USER_ROOT_PASS"
     fi
 }
@@ -137,34 +116,13 @@ get_root_password() {
 # Function to confirm partition replacement
 confirm_partitions() {
     if [ -z "$USER_REPLACE_PART" ]; then
-        clear
-        echo -e "${GREEN}Configuring partitions...${NC}"
-        echo -e "${GREEN}Choose partition setup:${NC}"
-        echo -e "${GREEN}1) Replace all partitions with new btrfs layout (default)${NC}"
-        echo -e "${GREEN}2) Use existing btrfs, preserve @home, @opt, and @srv (will format others)${NC}"
-        read -p "Enter choice (default: 1): " REPLY
-
-        case $REPLY in
-            2)
-                echo -e "${GREEN}WARNING: This will format all subvolumes except @home, @opt, and @srv${NC}"
-                read -p "Are you sure? (Y/n): " CONFIRM
-                if [[ -z "$CONFIRM" || $CONFIRM =~ ^[Yy]$ ]]; then
-                    USER_REPLACE_PART=2
-                else
-                    USER_REPLACE_PART=1
-                fi
-                ;;
-            *)
-                echo -e "${GREEN}WARNING: This will delete all existing partitions on $USER_DEV${NC}"
-                read -p "Are you sure? (Y/n): " CONFIRM
-                if [[ -z "$CONFIRM" || $CONFIRM =~ ^[Yy]$ ]]; then
-                    USER_REPLACE_PART=1
-                else
-                    echo -e "${GREEN}Installation cancelled${NC}"
-                    exit 1
-                fi
-                ;;
-        esac
+        # clear
+        # echo -e "${GREEN}Configuring partitions...${NC}"
+        # echo -e "${GREEN}Choose partition setup:${NC}"
+        # echo -e "${GREEN}1) Replace all partitions with new btrfs layout (default)${NC}"
+        # echo -e "${GREEN}2) Use existing btrfs, preserve @home, @opt, and @srv (will format others)${NC}"
+        # read -p "Enter choice (default: 1): " REPLY
+        USER_REPLACE_PART=1
         save_to_env "USER_REPLACE_PART" "$USER_REPLACE_PART"
     fi
 }
